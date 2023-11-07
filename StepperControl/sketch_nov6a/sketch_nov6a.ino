@@ -2,7 +2,7 @@
 #include <Stepper.h>
 
 // change this to the number of steps on your motor
-#define STEPS 32
+#define STEPS 2048
 
 Stepper stepper(STEPS, 8, 10, 9, 11);
 
@@ -13,8 +13,9 @@ const int pot = A0;    // speed control potentiometer is connected to analog pin
 
 float position = 0;
 float target_angle = 0;
+int pot_angle = 0;
 float stepsToDeg() {
-  return position * 360/32;
+  return position * 360/2048;
 }
 void setup() {
   // configure button pin as input with internal pull up enabled
@@ -25,10 +26,11 @@ void setup() {
 
 int direction_ = 1, speed_ = 0;
 int last_user_input = 0;
+int user_input = 0;
 void loop() {
-  int user_input = digitalRead(user_input_button);
-  if (user_input == 0) {
-    target_angle += 90;
+  user_input = digitalRead(user_input_button);
+  if (user_input == 0 && last_user_input != 0) {
+      stepper.step(2048/1);
   }
   last_user_input = user_input;
 
@@ -40,22 +42,31 @@ void loop() {
   if (speed_ != map(val, 0, 1023, 2, 500)) {  // if the speed was changed
     speed_ = map(val, 0, 1023, 2, 500);
     // set the speed of the motor
-    stepper.setSpeed(speed_);
+
   }
-  if (digitalRead(position_reset_button)) 
-  position = 0;
+  if (digitalRead(position_reset_button)) ;
+  //position = 0;
   // move the stepper motor
-  stepper.step(direction_);
-  position += direction_;
+  pot_angle = map(analogRead(pot), 0, 1023, -2048, 2048);
   print();
-  
+  stepper.setSpeed(15);
+  delay(20);
+  position += 2048;
+  //ground black
+  // 5v white 
 }
 
 void print() {
     // print labels
-  Serial.print(stepsToDeg());  // prints a label
-  Serial.print(" degrees");         // prints a tab
-  Serial.println();        // carriage return after the last label
+  //Serial.print(stepsToDeg());  // prints a label
+  Serial.print("pot: ");  
+  Serial.print(pot_angle);  
+  Serial.print(" button: ");   
+  Serial.print(user_input);   
+
+  // prints a tab 
+  Serial.println();    
+     // carriage return after the last label
 }
 
 // a small function for button debounce
