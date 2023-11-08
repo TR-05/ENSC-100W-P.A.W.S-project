@@ -27,13 +27,13 @@ void setup() {
 int direction_ = 1, speed_ = 0;
 int last_user_input = 0;
 int user_input = 0;
+int steps = 2048*4;
 void loop() {
   user_input = digitalRead(user_input_button);
   if (user_input == 0 && last_user_input != 0) {
-      stepper.step(2048/1);
+  stepper.step(steps);
   }
   last_user_input = user_input;
-
   // read analog value from the potentiometer
   int val = analogRead(pot);
 
@@ -50,7 +50,7 @@ void loop() {
   pot_angle = map(analogRead(pot), 0, 1023, -2048, 2048);
   print();
   stepper.setSpeed(15);
-  delay(20);
+  delay(10);
   position += 2048;
   //ground black
   // 5v white 
