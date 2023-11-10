@@ -49,12 +49,15 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define ENABLE 5
 #define DIRA 3
 #define DIRB 4
-
+const int leftButton = 2;  // direction control button is connected to Arduino pin 4
+const int rightButton = 6;  // direction control button is connected to Arduino pin 4
 void setup() {
   //---set pin direction
   pinMode(ENABLE,OUTPUT);
   pinMode(DIRA,OUTPUT);
   pinMode(DIRB,OUTPUT);
+  pinMode(leftButton, INPUT_PULLUP);
+  pinMode(rightButton, INPUT_PULLUP);
   Serial.begin(9600);
 
   // set up the LCD's number of columns and rows:
@@ -64,7 +67,47 @@ void setup() {
 }
 
 bool dir = 1;
+int leftState = 0;
+int rightState = 0;
 void loop() {
+
+  if (rightState !=  digitalRead(rightButton) &&  digitalRead(rightButton) == 0) {
+    stop();
+    delay(200);
+    if (dir) {
+        spinForward();
+    }
+    else {
+        spinBackward();
+    }
+    dir = !dir;
+  }
+  if (leftState !=  digitalRead(leftButton) &&  digitalRead(leftButton) == 0) {
+    stop();
+  }
+  leftState = digitalRead(leftButton);
+  rightState = digitalRead(rightButton);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Left Button");
+  lcd.setCursor(15, 0);
+  if (leftState == 0) {
+  lcd.print("P");
+  }
+  else {
+  lcd.print("Q");   
+  }
+  lcd.setCursor(0, 1);
+  lcd.print("Right Button");
+  lcd.setCursor(15, 1);
+  if (rightState == 0) {
+  lcd.print("P");
+  }
+  else {
+  lcd.print("Q");   
+  }  
+  /*
   print("Forward");
   spinForward();
   delay(3000);
@@ -79,7 +122,8 @@ void loop() {
 
   print("Stop");
   stop();
-  delay(2000);
+  delay(2000);*/
+  delay(50);
 }
 
 void print(String display) {
