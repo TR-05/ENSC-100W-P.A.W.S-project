@@ -1,17 +1,4 @@
-//www.elegoo.com
-//2016.12.9
-
 /*
-  LiquidCrystal Library - Hello World
-
- Demonstrates the use a 16x2 LCD display.  The LiquidCrystal
- library works with all LCD displays that are compatible with the
- Hitachi HD44780 driver. There are many of them out there, and you
- can usually tell them by the 16-pin interface.
-
- This sketch prints "Hello World!" to the LCD
- and shows the time.
-
   The circuit:
  * LCD RS pin to digital pin 7
  * LCD Enable pin to digital pin 8
@@ -25,23 +12,12 @@
  * 10K resistor:
  * ends to +5V and ground
  * wiper to LCD VO pin (pin 3)
-
- Library originally added 18 Apr 2008
- by David A. Mellis
- library modified 5 Jul 2009
- by Limor Fried (http://www.ladyada.net)
- example added 9 Jul 2009
- by Tom Igoe
- modified 22 Nov 2010
- by Tom Igoe
-
- This example code is in the public domain.
-
  http://www.arduino.cc/en/Tutorial/LiquidCrystal
  */
 
 // include the library code:
 #include <LiquidCrystal.h>
+#include "IRremote.h"
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
@@ -51,8 +27,14 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define DIRB 4
 const int leftButton = 2;  // direction control button is connected to Arduino pin 4
 const int rightButton = 6;  // direction control button is connected to Arduino pin 4
+int receiver = 13; // Signal Pin of IR receiver to Arduino Digital Pin 6
+
+IRrecv irrecv(receiver);    // create instance of 'irrecv'
+decode_results results;     // create instance of 'decode_results'
+
 void setup() {
   //---set pin direction
+  irrecv.enableIRIn(); // Start the receiver
   pinMode(ENABLE,OUTPUT);
   pinMode(DIRA,OUTPUT);
   pinMode(DIRB,OUTPUT);
@@ -66,24 +48,42 @@ void setup() {
   lcd.print("time");
 }
 
-bool dir = 1;
+//bool dir = 1;
+int state_motor = 0;
 int leftState = 0;
 int rightState = 0;
+
+bool lastVolUp = false;
+bool lastVolDown = false;
+
+float motor_rpm = 6372;
+float output_rpm = 177;
+float gear_ratio = motor_rpm / output_rpm * 1.15;
+int acel_time = 0;
 void loop() {
 
   if (rightState !=  digitalRead(rightButton) &&  digitalRead(rightButton) == 0) {
-    stop();
-    delay(200);
-    if (dir) {
+    //stop();
+    //delay(200);
+    state_motor++;
+    if (state_motor > 1){
+      state_motor = -1;
+    }
+
+    if (state_motor == 1) {
         spinForward();
     }
-    else {
+    else if (state_motor == -1){
         spinBackward();
     }
-    dir = !dir;
+    else {
+      stop();
+    }
   }
+  //testing little function
   if (leftState !=  digitalRead(leftButton) &&  digitalRead(leftButton) == 0) {
-    stop();
+    spinFor(90, 1);
+    //spinFor(720);
   }
   leftState = digitalRead(leftButton);
   rightState = digitalRead(rightButton);
@@ -123,7 +123,129 @@ void loop() {
   print("Stop");
   stop();
   delay(2000);*/
+
+
+
+
+bool currentVolUp = false;
+bool currentVolDown = false;
+if (irrecv.decode(&results)) // have we received an IR signal?
+
+  {
+    switch(results.value)
+    {
+
+      case 0xFFA857: // VOL- button pressed
+      currentVolDown = true;
+                      break;
+
+      case 0xFF629D: // VOL+ button pressed 
+      currentVolUp = true;
+                      break;
+                
+    }
+    
+      irrecv.resume(); // receive the next value    
+  }  
+
+
+
+   
+  if (currentVolUp !=  lastVolUp &&  currentVolUp) {
+    state_motor++;
+    if (state_motor > 1){
+      state_motor = -1;
+    }
+
+    if (state_motor == 1) {
+        spinForward();
+    }
+    else if (state_motor == -1){
+        spinBackward();
+    }
+    else {
+      stop();
+    }
+  }
+  lastVolUp = currentVolUp;
+
+
+  if (currentVolDown !=  lastVolDown &&  currentVolDown) {
+    /*
+    state_motor++;
+    if (state_motor > 1){
+      state_motor = -1;
+    }
+
+    if (state_motor == 1) {
+        spinForward();
+    }
+    else if (state_motor == -1){
+        spinBackward();
+    }
+    else {
+      stop();
+    }
+    */
+    state_motor = 0;
+    stop();
+  }
+  lastVolDown = currentVolDown;
+
+
+
   delay(50);
+}
+
+void spinFor(float deg, int dir) {
+  
+    stop();
+    delay(200);
+    if (dir == 1) {
+    spinForward();
+    }
+    if (dir == -1) {
+    spinBackward();
+    }
+    if (dir == 0) stop();
+    int timeToSpinFor = rotationTime(deg) + acel_time;
+    int startMillis = millis();
+    int loopCounter = 0;
+    //while(millis() - startMillis < timeToSpinFor)
+    //{
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(millis() - startMillis);
+
+        delay(timeToSpinFor);
+
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print(millis() - startMillis);
+    //}
+    stop();
+    state_motor = 0;
+    delay(1000);
+}
+
+
+int rotationTime(float degrees) 
+{
+  float targetRotations = degrees/360;
+  float rotations_of_motor = targetRotations * gear_ratio;
+  float output = motor_rpm / rotations_of_motor;
+  output /= 60;
+  output = 1 / output;
+    Serial.print("output seconds: ");  
+    Serial.print(output);  
+    Serial.print(" input: ");  
+    Serial.print(degrees);  
+    output *= 1000;
+
+    // prints a tab 
+    Serial.println();
+
+  return int(output);
 }
 
 void print(String display) {
