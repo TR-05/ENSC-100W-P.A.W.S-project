@@ -60,8 +60,11 @@ float motor_rpm = 6372;
 float output_rpm = 177;
 float gear_ratio = motor_rpm / output_rpm * 1.15;
 int acel_time = 0;
+bool currentVolUp = false;
+bool currentVolDown = false;
+bool EQ = false, lastEQ = false;
 void loop() {
-
+  recieveIR();
   if (rightState !=  digitalRead(rightButton) &&  digitalRead(rightButton) == 0) {
     //stop();
     //delay(200);
@@ -81,8 +84,8 @@ void loop() {
     }
   }
   //testing little function
-  if (leftState !=  digitalRead(leftButton) &&  digitalRead(leftButton) == 0) {
-    spinFor(90, 1);
+  if (lastEQ !=  EQ &&  EQ) {
+    spinFor(360, -1);
     //spinFor(720);
   }
   leftState = digitalRead(leftButton);
@@ -107,46 +110,9 @@ void loop() {
   else {
   lcd.print("Q");   
   }  
-  /*
-  print("Forward");
-  spinForward();
-  delay(3000);
-
-  print("Stop");
-  stop();
-  delay(2000);
-
-  print("Backward");
-  spinBackward();
-  delay(3000);
-
-  print("Stop");
-  stop();
-  delay(2000);*/
 
 
 
-
-bool currentVolUp = false;
-bool currentVolDown = false;
-if (irrecv.decode(&results)) // have we received an IR signal?
-
-  {
-    switch(results.value)
-    {
-
-      case 0xFFA857: // VOL- button pressed
-      currentVolDown = true;
-                      break;
-
-      case 0xFF629D: // VOL+ button pressed 
-      currentVolUp = true;
-                      break;
-                
-    }
-    
-      irrecv.resume(); // receive the next value    
-  }  
 
 
 
@@ -193,6 +159,7 @@ if (irrecv.decode(&results)) // have we received an IR signal?
   lastVolDown = currentVolDown;
 
 
+  lastEQ = EQ;
 
   delay(50);
 }
@@ -225,7 +192,7 @@ void spinFor(float deg, int dir) {
     //}
     stop();
     state_motor = 0;
-    delay(1000);
+    delay(200);
 }
 
 
@@ -281,4 +248,93 @@ void spin(bool forward) {
 void stop() {
   digitalWrite(DIRA,LOW); //fast stop
   digitalWrite(DIRB,LOW); //fast stop  
+}
+
+
+
+void recieveIR()
+{
+
+if (irrecv.decode(&results)) // have we received an IR signal?
+
+  {
+    Serial.print("New Press: ");  
+    Serial.print(results.value, HEX);  
+    Serial.println();
+  
+    currentVolUp = false;
+    currentVolUp = false;
+    EQ = false;
+    switch(results.value)
+    {
+
+
+      case 0xFFA857: // VOL- button pressed
+      currentVolUp = true;
+                      break;
+      case 0xFF629D: // VOL+ button pressed 
+      currentVolUp = true;
+                      break;
+      case 0xFF6897: // 0
+      currentVolUp = true;
+                      break;
+      case 0xFFA25D: // Power
+      currentVolDown = true;
+                      break;  
+      case 0xFFE21D: // FUNC/STOP
+      currentVolUp = true;
+                      break;  
+      case 0xFF22DD: // left arrow
+      currentVolUp = true;
+                      break;  
+      case 0xFF02FD: // Pause/Play
+      currentVolUp = true;
+                      break;  
+      case 0xFFC23D: // Right Arrow
+      currentVolUp = true;
+                      break;  
+      case 0xFFE01F: // Down Arrow
+      currentVolUp = true;
+                      break;  
+      case 0xFF906F: // Up Arrow
+      currentVolUp = true;
+                      break;  
+      case 0xFF9867: // EQ
+      EQ = true;
+                      break;  
+      case 0xFFB04F: // ST/REPT
+      currentVolUp = true;
+                      break;  
+      case 0xFF30CF: // 1
+      currentVolUp = true;
+                      break;  
+      case 0xFF18E7: // 2
+      currentVolUp = true;
+                      break;  
+      case 0xFF7A85: // 3
+      currentVolUp = true;
+                      break;  
+      case 0xFF10EF: // 4
+      currentVolUp = true;
+                      break;  
+      case 0xFF38C7: // 5
+      currentVolUp = true;
+                      break;  
+      case 0xFF5AA5: // 6
+      currentVolUp = true;
+                      break;  
+      case 0xFF42BD: // 7
+      currentVolUp = true;
+                      break;  
+      case 0xFF4AB5: // 8
+      currentVolUp = true;
+                      break;  
+      case 0xFF52AD: // 9
+      currentVolUp = true;
+                      break;  
+      
+    }
+    
+      irrecv.resume(); // receive the next value    
+  }  
 }
