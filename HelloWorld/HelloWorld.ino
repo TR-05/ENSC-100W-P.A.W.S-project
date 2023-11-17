@@ -65,6 +65,9 @@ bool button_VolDown = false;
 bool button_EQ = false, last_button_EQ = false;
 bool button_power = false, button_0 = false, button_1 = false, button_2 = false;
 bool last_button_power = false, last_button_0 = false, last_button_1 = false, last_button_2 = false;
+bool last_button_Down = false, button_Down = false;
+bool last_button_Up = false, button_Up = false;
+bool last_button_Func = false, button_Func = false;
 int lcd_counter = 0;
 
 void loop() {
@@ -91,11 +94,12 @@ void loop() {
     spinBackward();
   }
 
-  if (button_VolUp !=  last_button_VolUp &&  button_VolUp) {
+  if (button_Up !=  last_button_Up &&  button_Up) {
     lcd_counter++;
+    //Serial.println(lcd_counter);
   }
 
-  if (button_VolDown !=  last_button_VolDown &&  button_VolDown) {
+  if (button_Down !=  last_button_Down &&  button_Down) {
     lcd_counter--;
   }
 
@@ -254,6 +258,9 @@ if (irrecv.decode(&results)) // have we received an IR signal?
     button_1 = false;
     button_2 = false;
     button_power = false;
+    button_Down = false;
+    button_Up = false;
+    button_Func = false;
 
     switch(results.value)
     {
@@ -272,7 +279,7 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       button_power = true;
                       break;  
       case 0xFFE21D: // FUNC/STOP
-      button_VolUp = true;
+      button_Func = true;
                       break;  
       case 0xFF22DD: // left arrow
       button_VolUp = true;
@@ -284,10 +291,10 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       button_VolUp = true;
                       break;  
       case 0xFFE01F: // Down Arrow
-      button_VolUp = true;
+      button_Down = true;
                       break;  
       case 0xFF906F: // Up Arrow
-      button_VolUp = true;
+      button_Up = true;
                       break;  
       case 0xFF9867: // button_EQ
       button_EQ = true;
