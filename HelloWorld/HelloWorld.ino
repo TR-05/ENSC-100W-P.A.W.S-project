@@ -53,18 +53,19 @@ int state_motor = 0;
 int leftState = 0;
 int rightState = 0;
 
-bool lastVolUp = false;
-bool lastVolDown = false;
+bool last_button_VolUp = false;
+bool last_button_VolDown = false;
 
 float motor_rpm = 6372;
 float output_rpm = 177;
 float gear_ratio = motor_rpm / output_rpm * 1.15;
 int acel_time = 0;
-bool currentVolUp = false;
-bool currentVolDown = false;
-bool EQ = false, lastEQ = false;
+bool button_VolUp = false;
+bool button_VolDown = false;
+bool button_EQ = false, last_button_EQ = false;
 bool button_power = false, button_0 = false, button_1 = false, button_2 = false;
 bool last_button_power = false, last_button_0 = false, last_button_1 = false, last_button_2 = false;
+int lcd_counter = 0;
 
 void loop() {
   recieveIR();
@@ -72,7 +73,7 @@ void loop() {
     cycleMotor();
   }
   //testing little function
-  if (lastEQ !=  EQ &&  EQ) {
+  if (last_button_EQ !=  button_EQ &&  button_EQ) {
     spinFor(360, -1);
   }
 
@@ -90,13 +91,12 @@ void loop() {
     spinBackward();
   }
 
-  if (currentVolUp !=  lastVolUp &&  currentVolUp) {
-    cycleMotor();
+  if (button_VolUp !=  last_button_VolUp &&  button_VolUp) {
+    lcd_counter++;
   }
 
-  if (currentVolDown !=  lastVolDown &&  currentVolDown) {
-    state_motor = 0;
-    stop();
+  if (button_VolDown !=  last_button_VolDown &&  button_VolDown) {
+    lcd_counter--;
   }
 
 
@@ -105,18 +105,14 @@ void loop() {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Left Button");
-  lcd.setCursor(15, 0);
-  if (leftState == 0) {
-  lcd.print("1");
-  }
-  else {
-  lcd.print("0");   
-  }
+  lcd.print("Counter");
+  lcd.setCursor(14, 0);
+  lcd.print(lcd_counter);
+  
   lcd.setCursor(0, 1);
-  lcd.print("Right Button");
+  lcd.print("Left Button");
   lcd.setCursor(15, 1);
-  if (rightState == 0) {
+  if (leftState == 0) {
   lcd.print("1");
   }
   else {
@@ -126,9 +122,9 @@ void loop() {
 
 
 
-  lastVolDown = currentVolDown;
-  lastVolUp = currentVolUp;
-  lastEQ = EQ;
+  last_button_VolDown = button_VolDown;
+  last_button_VolUp = button_VolUp;
+  last_button_EQ = button_EQ;
   last_button_power = button_power;
   last_button_0 = button_0;
   last_button_1 = button_1;
@@ -251,9 +247,9 @@ if (irrecv.decode(&results)) // have we received an IR signal?
     Serial.print(results.value, HEX);  
     Serial.println();
   
-    currentVolUp = false;
-    currentVolUp = false;
-    EQ = false;
+    button_VolUp = false;
+    button_VolDown= false;
+    button_EQ = false;
     button_0 = false;
     button_1 = false;
     button_2 = false;
@@ -264,10 +260,10 @@ if (irrecv.decode(&results)) // have we received an IR signal?
 
 
       case 0xFFA857: // VOL- button pressed
-      currentVolUp = true;
+      button_VolDown = true;
                       break;
       case 0xFF629D: // VOL+ button pressed 
-      currentVolUp = true;
+      button_VolUp = true;
                       break;
       case 0xFF6897: // 0
       button_0 = true;
@@ -276,28 +272,28 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       button_power = true;
                       break;  
       case 0xFFE21D: // FUNC/STOP
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF22DD: // left arrow
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF02FD: // Pause/Play
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFFC23D: // Right Arrow
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFFE01F: // Down Arrow
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF906F: // Up Arrow
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
-      case 0xFF9867: // EQ
-      EQ = true;
+      case 0xFF9867: // button_EQ
+      button_EQ = true;
                       break;  
       case 0xFFB04F: // ST/REPT
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF30CF: // 1
       button_1 = true;
@@ -306,25 +302,25 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       button_2 = true;
                       break;  
       case 0xFF7A85: // 3
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF10EF: // 4
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF38C7: // 5
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF5AA5: // 6
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF42BD: // 7
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF4AB5: // 8
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       case 0xFF52AD: // 9
-      currentVolUp = true;
+      button_VolUp = true;
                       break;  
       
     }
