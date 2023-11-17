@@ -63,31 +63,43 @@ int acel_time = 0;
 bool currentVolUp = false;
 bool currentVolDown = false;
 bool EQ = false, lastEQ = false;
+bool button_power = false, button_0 = false, button_1 = false, button_2 = false;
+bool last_button_power = false, last_button_0 = false, last_button_1 = false, last_button_2 = false;
+
 void loop() {
   recieveIR();
   if (rightState !=  digitalRead(rightButton) &&  digitalRead(rightButton) == 0) {
-    //stop();
-    //delay(200);
-    state_motor++;
-    if (state_motor > 1){
-      state_motor = -1;
-    }
-
-    if (state_motor == 1) {
-        spinForward();
-    }
-    else if (state_motor == -1){
-        spinBackward();
-    }
-    else {
-      stop();
-    }
+    cycleMotor();
   }
   //testing little function
   if (lastEQ !=  EQ &&  EQ) {
     spinFor(360, -1);
-    //spinFor(720);
   }
+
+  if (last_button_power !=  button_power &&  button_power) {
+    stop();
+  }
+
+  if (last_button_0 !=  button_0 &&  button_0) {
+    stop();
+  }
+  if (last_button_1 !=  button_1 &&  button_1) {
+    spinForward();
+  }
+  if (last_button_2 !=  button_2 &&  button_2) {
+    spinBackward();
+  }
+
+  if (currentVolUp !=  lastVolUp &&  currentVolUp) {
+    cycleMotor();
+  }
+
+  if (currentVolDown !=  lastVolDown &&  currentVolDown) {
+    state_motor = 0;
+    stop();
+  }
+
+
   leftState = digitalRead(leftButton);
   rightState = digitalRead(rightButton);
 
@@ -96,72 +108,33 @@ void loop() {
   lcd.print("Left Button");
   lcd.setCursor(15, 0);
   if (leftState == 0) {
-  lcd.print("P");
+  lcd.print("1");
   }
   else {
-  lcd.print("Q");   
+  lcd.print("0");   
   }
   lcd.setCursor(0, 1);
   lcd.print("Right Button");
   lcd.setCursor(15, 1);
   if (rightState == 0) {
-  lcd.print("P");
+  lcd.print("1");
   }
   else {
-  lcd.print("Q");   
+  lcd.print("0");   
   }  
 
 
 
 
-
-
-   
-  if (currentVolUp !=  lastVolUp &&  currentVolUp) {
-    state_motor++;
-    if (state_motor > 1){
-      state_motor = -1;
-    }
-
-    if (state_motor == 1) {
-        spinForward();
-    }
-    else if (state_motor == -1){
-        spinBackward();
-    }
-    else {
-      stop();
-    }
-  }
-  lastVolUp = currentVolUp;
-
-
-  if (currentVolDown !=  lastVolDown &&  currentVolDown) {
-    /*
-    state_motor++;
-    if (state_motor > 1){
-      state_motor = -1;
-    }
-
-    if (state_motor == 1) {
-        spinForward();
-    }
-    else if (state_motor == -1){
-        spinBackward();
-    }
-    else {
-      stop();
-    }
-    */
-    state_motor = 0;
-    stop();
-  }
   lastVolDown = currentVolDown;
-
-
+  lastVolUp = currentVolUp;
   lastEQ = EQ;
+  last_button_power = button_power;
+  last_button_0 = button_0;
+  last_button_1 = button_1;
+  last_button_2 = button_2;
 
-  delay(50);
+  delay(20);
 }
 
 void spinFor(float deg, int dir) {
@@ -250,7 +223,23 @@ void stop() {
   digitalWrite(DIRB,LOW); //fast stop  
 }
 
+void cycleMotor() 
+{
+    state_motor++;
+    if (state_motor > 1){
+      state_motor = -1;
+    }
 
+    if (state_motor == 1) {
+        spinForward();
+    }
+    else if (state_motor == -1){
+        spinBackward();
+    }
+    else {
+      stop();
+    }
+}
 
 void recieveIR()
 {
@@ -265,6 +254,11 @@ if (irrecv.decode(&results)) // have we received an IR signal?
     currentVolUp = false;
     currentVolUp = false;
     EQ = false;
+    button_0 = false;
+    button_1 = false;
+    button_2 = false;
+    button_power = false;
+
     switch(results.value)
     {
 
@@ -276,10 +270,10 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       currentVolUp = true;
                       break;
       case 0xFF6897: // 0
-      currentVolUp = true;
+      button_0 = true;
                       break;
       case 0xFFA25D: // Power
-      currentVolDown = true;
+      button_power = true;
                       break;  
       case 0xFFE21D: // FUNC/STOP
       currentVolUp = true;
@@ -306,10 +300,10 @@ if (irrecv.decode(&results)) // have we received an IR signal?
       currentVolUp = true;
                       break;  
       case 0xFF30CF: // 1
-      currentVolUp = true;
+      button_1 = true;
                       break;  
       case 0xFF18E7: // 2
-      currentVolUp = true;
+      button_2 = true;
                       break;  
       case 0xFF7A85: // 3
       currentVolUp = true;
