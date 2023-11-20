@@ -25,9 +25,10 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define ENABLE 5
 #define DIRA 3
 #define DIRB 4
-const int leftButton = 2;  // direction control button is connected to Arduino pin 4
+const int limit_switch_port = 2;  // direction control button is connected to Arduino pin 4
 const int rightButton = 6;  // direction control button is connected to Arduino pin 4
 int receiver = 13; // Signal Pin of IR receiver to Arduino Digital Pin 6
+int Contrast=75;
 
 IRrecv irrecv(receiver);    // create instance of 'irrecv'
 decode_results results;     // create instance of 'decode_results'
@@ -35,11 +36,11 @@ decode_results results;     // create instance of 'decode_results'
 void setup() {
   //---set pin direction
   irrecv.enableIRIn(); // Start the receiver
+  analogWrite(6,Contrast);
   pinMode(ENABLE,OUTPUT);
   pinMode(DIRA,OUTPUT);
   pinMode(DIRB,OUTPUT);
-  pinMode(leftButton, INPUT_PULLUP);
-  pinMode(rightButton, INPUT_PULLUP);
+  pinMode(limit_switch_port, INPUT_PULLUP);
   Serial.begin(9600);
 
   // set up the LCD's number of columns and rows:
@@ -51,7 +52,6 @@ void setup() {
 //bool dir = 1;
 int state_motor = 0;
 int leftState = 0;
-int rightState = 0;
 
 bool last_button_VolUp = false;
 bool last_button_VolDown = false;
@@ -68,13 +68,17 @@ bool last_button_power = false, last_button_0 = false, last_button_1 = false, la
 bool last_button_Down = false, button_Down = false;
 bool last_button_Up = false, button_Up = false;
 bool last_button_Func = false, button_Func = false;
+bool limit_switch, last_limit_switch;
 int lcd_counter = 0;
 
 void loop() {
+  //Serial.print("Time: ");  
+  float t = millis();
+  t /= 1000;
+  //Serial.print(t, 1);  
+  //Serial.println();  
+
   recieveIR();
-  if (rightState !=  digitalRead(rightButton) &&  digitalRead(rightButton) == 0) {
-    cycleMotor();
-  }
   //testing little function
   if (last_button_EQ !=  button_EQ &&  button_EQ) {
     spinFor(360, -1);
@@ -104,10 +108,12 @@ void loop() {
   }
 
 
-  leftState = digitalRead(leftButton);
-  rightState = digitalRead(rightButton);
-
-  lcd.clear();
+  limit_switch = !digitalRead(limit_switch_port);
+  if (limit_switch !=  last_limit_switch &&  limit_switch) {
+    lcd_counter++;
+    //Serial.println(lcd_counter);
+  }
+    lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Counter");
   lcd.setCursor(14, 0);
@@ -116,16 +122,12 @@ void loop() {
   lcd.setCursor(0, 1);
   lcd.print("Left Button");
   lcd.setCursor(15, 1);
-  if (leftState == 0) {
-  lcd.print("1");
-  }
-  else {
-  lcd.print("0");   
-  }  
+  lcd.print(limit_switch);
 
 
 
 
+  last_limit_switch = limit_switch;
   last_button_VolDown = button_VolDown;
   last_button_VolUp = button_VolUp;
   last_button_EQ = button_EQ;
@@ -243,14 +245,6 @@ void cycleMotor()
 
 void recieveIR()
 {
-
-if (irrecv.decode(&results)) // have we received an IR signal?
-
-  {
-    Serial.print("New Press: ");  
-    Serial.print(results.value, HEX);  
-    Serial.println();
-  
     button_VolUp = false;
     button_VolDown= false;
     button_EQ = false;
@@ -262,9 +256,18 @@ if (irrecv.decode(&results)) // have we received an IR signal?
     button_Up = false;
     button_Func = false;
 
+if (irrecv.decode(&results)) // have we received an IR signal?
+
+  {
+    Serial.print("New Press: ");  
+    Serial.print(results.value, HEX);  
+    Serial.println();  
+
+
     switch(results.value)
     {
-
+     // case 0xFFFFFFFF:
+       //   break;
 
       case 0xFFA857: // VOL- button pressed
       button_VolDown = true;
