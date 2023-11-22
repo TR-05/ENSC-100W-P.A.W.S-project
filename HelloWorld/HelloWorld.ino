@@ -62,6 +62,10 @@ bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
   button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
   button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func;
 
+//Amount 
+float cup_amount = 0;
+float user_amount = 0;
+float rotate_amount = user_amount*4;
 
 int lcd_counter = 0;
 
@@ -323,4 +327,13 @@ void recieveIR() {
 
     irrecv.resume();  // receive the next value
   }
+}
+
+void feeder(rotate_amount){
+  do{
+      spinFor(180, 1);
+      stop(1000);
+      spinFor(180, 1);
+      cup_amount += .25;
+    } while (cup_amount < user_amount);
 }
