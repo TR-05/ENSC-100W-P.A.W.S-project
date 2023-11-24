@@ -25,9 +25,12 @@ LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 #define ENABLE 5
 #define DIRA 3
 #define DIRB 4
+const int SW_pin = 6;             // digital pin connected to switch output
+const int X_pin = A0;             // analog pin connected to X output
+const int Y_pin = A1;             // analog pin connected to Y output
 const int limit_switch_port = 2;  // direction control button is connected to Arduino pin 4
-const int rightButton = 6;        // direction control button is connected to Arduino pin 4
-const int receiver = 13;          // Signal Pin of IR receiver to Arduino Digital Pin 6
+//const int rightButton = 13;        // direction control button is connected to Arduino pin 4
+const int receiver = 13;  // Signal Pin of IR receiver to Arduino Digital Pin 6
 
 IRrecv irrecv(receiver);  // create instance of 'irrecv'
 decode_results results;   // create instance of 'decode_results'
@@ -38,6 +41,8 @@ void setup() {
   pinMode(DIRA, OUTPUT);
   pinMode(DIRB, OUTPUT);
   pinMode(limit_switch_port, INPUT_PULLUP);
+  pinMode(SW_pin, INPUT_PULLUP);
+
   Serial.begin(9600);
 
   // set up the LCD's number of columns and rows:
@@ -50,8 +55,8 @@ void setup() {
 int state_motor = 0;
 
 float motor_rpm = 6372;
-float output_rpm = 177;
-float gear_ratio = motor_rpm / output_rpm * 1.15;
+float output_rpm = 35.4;
+float gear_ratio = motor_rpm / output_rpm * 1;
 int acel_time = 0;
 
 //vex limit switch
@@ -61,11 +66,12 @@ bool limit_switch, last_limit_switch;
 bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
   button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
   button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func;
-
-//Amount 
+bool joystick_button, last_joystick_button;
+float joystick_x, joystick_y;
+//Amount
 float cup_amount = 0;
 float user_amount = 0;
-float rotate_amount = user_amount*4;
+float rotate_amount = user_amount * 4;
 
 int lcd_counter = 0;
 
@@ -75,6 +81,11 @@ void loop() {
   t /= 1000;
   //Serial.print(t, 1);
   //Serial.println();
+  joystick_button = !digitalRead(SW_pin);
+  joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
+  joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
+  if (fabs(joystick_x) < 6) joystick_x = 0;
+  if (fabs(joystick_y) < 6) joystick_y = 0;
 
   recieveIR();
   //testing little function
@@ -90,15 +101,35 @@ void loop() {
     stop();
   }
   if (last_button_1 != button_1 && button_1) {
-    spinForward();
+    spinForward(255);
   }
   if (last_button_2 != button_2 && button_2) {
-    spinBackward();
+    spinBackward(255);
   }
 
   if (button_Up != last_button_Up && button_Up) {
     lcd_counter++;
     //Serial.println(lcd_counter);
+  }
+
+    if (joystick_y > 0) 
+    {
+    float speed = map(joystick_y, 0, 100, 50, 255);
+    spinForward(speed);
+    } 
+    else if (joystick_y < 0)
+    {
+    float speed = map(joystick_y, 0, -100, 50, 255);
+      spinBackward(speed);
+    }
+    else {
+      stop();
+    }
+  if (joystick_button != last_joystick_button && joystick_button) {
+    spinFor(180, 1);
+    delay(500);
+    spinFor(180, 1);
+    lcd_counter++;
   }
 
   if (button_Down != last_button_Down && button_Down) {
@@ -108,6 +139,9 @@ void loop() {
 
   limit_switch = !digitalRead(limit_switch_port);
   if (limit_switch != last_limit_switch && limit_switch) {
+    spinFor(180, 1);
+    delay(500);
+    spinFor(180, 1);
     lcd_counter++;
     //Serial.println(lcd_counter);
   }
@@ -117,12 +151,21 @@ void loop() {
   lcd.setCursor(14, 0);
   lcd.print(lcd_counter);
 
+
+
+
   lcd.setCursor(0, 1);
-  lcd.print("Left Button");
-  lcd.setCursor(15, 1);
-  lcd.print(limit_switch);
+  lcd.print(joystick_x);
+  lcd.setCursor(8, 1);
+  lcd.print(joystick_y);
 
-
+  Serial.print("Switch:  ");
+  Serial.print(joystick_button);
+  Serial.print("  X-axis: ");
+  Serial.print(joystick_x);
+  Serial.print("  Y-axis: ");
+  Serial.print(joystick_y);
+  Serial.print("\n");
 
 
   last_limit_switch = limit_switch;
@@ -133,7 +176,7 @@ void loop() {
   last_button_0 = button_0;
   last_button_1 = button_1;
   last_button_2 = button_2;
-
+  last_joystick_button = joystick_button;
   delay(20);
 }
 
@@ -142,10 +185,10 @@ void spinFor(float deg, int dir) {
   stop();
   delay(200);
   if (dir == 1) {
-    spinForward();
+    spinForward(255);
   }
   if (dir == -1) {
-    spinBackward();
+    spinBackward(255);
   }
   if (dir == 0) stop();
   int timeToSpinFor = rotationTime(deg) + acel_time;
@@ -194,14 +237,14 @@ void print(String display) {
   lcd.setCursor(0, 1);
   lcd.print(display);
 }
-void spinForward() {
-  digitalWrite(ENABLE, HIGH);  //enable on
+void spinForward(float velocity) {
+  analogWrite(ENABLE,velocity); //enable on
   digitalWrite(DIRA, HIGH);    //one way
   digitalWrite(DIRB, LOW);
 }
 
-void spinBackward() {
-  digitalWrite(ENABLE, HIGH);  //enable on
+void spinBackward(float velocity) {
+  analogWrite(ENABLE,velocity); //enable on
   digitalWrite(DIRA, LOW);     //one way
   digitalWrite(DIRB, HIGH);
 }
@@ -228,9 +271,9 @@ void cycleMotor() {
   }
 
   if (state_motor == 1) {
-    spinForward();
+    spinForward(255);
   } else if (state_motor == -1) {
-    spinBackward();
+    spinBackward(255);
   } else {
     stop();
   }
@@ -329,11 +372,11 @@ void recieveIR() {
   }
 }
 
-void feeder(rotate_amount){
+/*void feeder(rotate_amount){
   do{
       spinFor(180, 1);
       stop(1000);
       spinFor(180, 1);
       cup_amount += .25;
     } while (cup_amount < user_amount);
-}
+}*/
