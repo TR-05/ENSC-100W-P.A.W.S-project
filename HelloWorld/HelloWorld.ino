@@ -154,13 +154,13 @@ void loop() {
     lcd_counter--;
   }
 
-  if (button_Right != last_button_Right && button_Right){
+  /*if (button_Right != last_button_Right && button_Right){
     time_interval++;
   }
 
   if (button_Left != last_button_Left && button_Left && time_interval > 0){
     time_interval--;
-  }
+  }*/
 
 
   limit_switch = !digitalRead(limit_switch_port);
@@ -174,7 +174,7 @@ void loop() {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Interval");    
+  //lcd.print("Interval");    
   lcd.setCursor(14, 0);    
   lcd.print(time_interval);
 
@@ -199,6 +199,8 @@ void loop() {
   Serial.print("  Y-axis: ");
   Serial.print(joystick_y);
   Serial.print("\n");
+
+  getTime();
 
 
   last_limit_switch = limit_switch;
@@ -410,35 +412,32 @@ int recieveIR() {
   }
   return 0;
 }
-
-void getTime() {
-
-
-  switch (recieveIR()) { 
-
-    case button_Right:
-      {
-        // increment the time interval when up button is pressed
+void getTime(){
+ if (irrecv.decode(&results)) {
+    switch (results.value) {
+      case 0xFFC23D: //button right
+        // Increment the time interval when the right button is pressed
         time_interval++;
-        lcd.clear(); 
-        lcd.print("Interval: "); //new time interval
+        lcd.clear();
+        lcd.print("Interval: ");
         lcd.print(time_interval);
-        break;
-      }
-    case button_Left:
-      {
-        // decrement the time interval when down button is pressed
-        if (time_interval > 0) { // prevent the time interval from going below 0
+       
+
+      case 0xFF22DD:
+        // Decrement the time interval when the left button is pressed
+        if (time_interval > 0) {
           time_interval--;
-          lcd.clear(); 
-          lcd.print("Interval: "); // print the new time interval
+          lcd.clear();
+          lcd.print("Interval: ");
           lcd.print(time_interval);
         }
-      }
-      default
-      {
+     
+
+      default:
         break;
-      }
+    }
+
+    irrecv.resume();  // Receive the next value
   }
 }
 
