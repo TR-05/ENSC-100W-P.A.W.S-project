@@ -200,7 +200,22 @@ void loop() {
   Serial.print(joystick_y);
   Serial.print("\n");
 
-  //getTime();
+  lcd.clear();
+  getTime();
+  lcd.print("Interval: ");
+  lcd.setCursor(10,0);
+  lcd.print("spins");
+  lcd.setCursor(0, 1);
+  lcd.print("every  ");
+  lcd.print(time_interval);
+  lcd.setCursor(10, 1);
+  if (time_interval <= 1){
+      lcd.print("hour");
+    }
+    else{
+      lcd.print("hours");
+    }
+  
 
 
   last_limit_switch = limit_switch;
