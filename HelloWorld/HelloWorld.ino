@@ -73,7 +73,23 @@ float cup_amount = 0;
 float user_amount = 0;
 float rotate_amount = user_amount * 4;
 
+int user_interval = 0;
+
 int lcd_counter = 0;
+
+int user_time(){
+    lcd.setCursor(0,0);
+    if (joystick_x > 0){
+      lcd_counter++;
+      delay(200);
+      return lcd_counter;
+    }
+  }
+  //joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
+  void set_time(){
+     lcd.setCursor(0, 0);
+     lcd.print(user_time());
+  }
 
 void loop() {
   //Serial.print("Time: ");
@@ -127,7 +143,7 @@ void loop() {
     }
   if (joystick_button != last_joystick_button && joystick_button) {
     spinFor(180, 1);
-    delay(500);
+    delay(1000);
     spinFor(180, 1);
     lcd_counter++;
   }
@@ -145,6 +161,9 @@ void loop() {
     lcd_counter++;
     //Serial.println(lcd_counter);
   }
+
+
+
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Counter");
