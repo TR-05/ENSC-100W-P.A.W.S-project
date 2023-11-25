@@ -54,6 +54,10 @@ void setup() {
 //bool dir = 1;
 int state_motor = 0;
 
+int time_interval = 0;
+int button_pressed = 0;
+//result.value will be lcd key
+
 float motor_rpm = 6372;
 float output_rpm = 35.4;
 float gear_ratio = motor_rpm / output_rpm * 1;
@@ -65,15 +69,13 @@ bool limit_switch, last_limit_switch;
 //Remote buttons
 bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
   button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
-  button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func;
+  button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func, button_Left, last_button_Left, button_Right, last_button_Right;
 bool joystick_button, last_joystick_button;
 float joystick_x, joystick_y;
 //Amount
 float cup_amount = 0;
 float user_amount = 0;
 float rotate_amount = user_amount * 4;
-
-int user_interval = 0;
 
 int lcd_counter = 0;
 
@@ -152,6 +154,14 @@ void loop() {
     lcd_counter--;
   }
 
+  if (button_Right != last_button_Right && button_Right){
+    time_interval++;
+  }
+
+  if (button_Left != last_button_Left && button_Left && time_interval > 0){
+    time_interval--;
+  }
+
 
   limit_switch = !digitalRead(limit_switch_port);
   if (limit_switch != last_limit_switch && limit_switch) {
@@ -162,13 +172,17 @@ void loop() {
     //Serial.println(lcd_counter);
   }
 
-
-
   lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Interval");    
+  lcd.setCursor(14, 0);    
+  lcd.print(time_interval);
+
+  /*lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Counter");
   lcd.setCursor(14, 0);
-  lcd.print(lcd_counter);
+  lcd.print(lcd_counter);*/
 
 
 
@@ -196,6 +210,8 @@ void loop() {
   last_button_1 = button_1;
   last_button_2 = button_2;
   last_joystick_button = joystick_button;
+  last_button_Right = button_Right;
+  last_button_Left = button_Left;
   delay(20);
 }
 
@@ -298,7 +314,7 @@ void cycleMotor() {
   }
 }
 
-void recieveIR() {
+int recieveIR() {
   button_VolUp = false;
   button_VolDown = false;
   button_EQ = false;
@@ -309,6 +325,8 @@ void recieveIR() {
   button_Down = false;
   button_Up = false;
   button_Func = false;
+  button_Left = false;
+  button_Right = false;
 
   if (irrecv.decode(&results))  // have we received an IR signal?
 
@@ -324,6 +342,7 @@ void recieveIR() {
 
       case 0xFFA857:  // VOL- button pressed
         button_VolDown = true;
+        button_pressed = 0xFFA857;
         break;
       case 0xFF629D:  // VOL+ button pressed
         button_VolUp = true;
@@ -338,13 +357,13 @@ void recieveIR() {
         button_Func = true;
         break;
       case 0xFF22DD:  // left arrow
-        button_VolUp = true;
+        button_Left = true;
         break;
       case 0xFF02FD:  // Pause/Play
         button_VolUp = true;
         break;
       case 0xFFC23D:  // Right Arrow
-        button_VolUp = true;
+        button_Right = true;
         break;
       case 0xFFE01F:  // Down Arrow
         button_Down = true;
@@ -388,6 +407,38 @@ void recieveIR() {
     }
 
     irrecv.resume();  // receive the next value
+  }
+  return 0;
+}
+
+void getTime() {
+
+
+  switch (recieveIR()) { 
+
+    case button_Right:
+      {
+        // increment the time interval when up button is pressed
+        time_interval++;
+        lcd.clear(); 
+        lcd.print("Interval: "); //new time interval
+        lcd.print(time_interval);
+        break;
+      }
+    case button_Left:
+      {
+        // decrement the time interval when down button is pressed
+        if (time_interval > 0) { // prevent the time interval from going below 0
+          time_interval--;
+          lcd.clear(); 
+          lcd.print("Interval: "); // print the new time interval
+          lcd.print(time_interval);
+        }
+      }
+      default
+      {
+        break;
+      }
   }
 }
 
