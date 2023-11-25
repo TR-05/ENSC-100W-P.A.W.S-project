@@ -127,7 +127,7 @@ void loop() {
 
   if (button_Up != last_button_Up && button_Up) {
     lcd_counter++;
-    //Serial.println(lcd_counter);
+    Serial.println(lcd_counter);
   }
 
     if (joystick_y > 0) 
@@ -154,13 +154,13 @@ void loop() {
     lcd_counter--;
   }
 
-  /*if (button_Right != last_button_Right && button_Right){
+  if (button_Right != last_button_Right && button_Right){
     time_interval++;
   }
 
   if (button_Left != last_button_Left && button_Left && time_interval > 0){
     time_interval--;
-  }*/
+  }
 
 
   limit_switch = !digitalRead(limit_switch_port);
@@ -178,11 +178,11 @@ void loop() {
   lcd.setCursor(14, 0);    
   lcd.print(time_interval);
 
-  /*lcd.clear();
+  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Counter");
   lcd.setCursor(14, 0);
-  lcd.print(lcd_counter);*/
+  lcd.print(lcd_counter);
 
 
 
@@ -200,7 +200,7 @@ void loop() {
   Serial.print(joystick_y);
   Serial.print("\n");
 
-  getTime();
+  //getTime();
 
 
   last_limit_switch = limit_switch;
