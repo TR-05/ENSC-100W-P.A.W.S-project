@@ -57,10 +57,10 @@ void setup() {
   double food_amount = getFood();
   Serial.print(food_amount);
 
-lcd.clear();
+  lcd.clear();
   lcd.print(food_amount);
   lcd.print(" cups");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("every ");
   lcd.print(time_interval);
   lcd.print(" hours");
@@ -71,6 +71,8 @@ lcd.clear();
 int state_motor = 0;
 
 int time_interval = 0;
+
+
 int button_pressed = 0;
 //result.value will be lcd key
 
@@ -91,6 +93,7 @@ bool joystick_button, last_joystick_button;
 float joystick_x, joystick_y;
 //Amount
 double food_amount = 0;
+double food_out = 0;
 double rotate_amount = food_amount * 4;
 
 int lcd_counter = 0;
@@ -110,6 +113,8 @@ void set_time() {
 }
 
 void loop() {
+  long elapsed_time = time_elapsed();
+  Serial.print(elapsed_time);
   //Serial.print("Time: ");
   float t = millis();
   t /= 1000;
@@ -185,11 +190,21 @@ void loop() {
     //Serial.println(lcd_counter);
   }
 
-  lcd.clear();
+  /*lcd.clear();
   lcd.setCursor(0, 0);
   //lcd.print("Interval");
   lcd.setCursor(14, 0);
-  lcd.print(time_interval);
+  lcd.print(time_interval);*/
+  if (elapsed_time == time_interval) {
+    lcd.clear();
+    lcd.print("Dispensing");
+    while (food_amount <= food_out) {
+      spinFor(180, 1);
+      delay(500);
+      spinFor(180, 1);
+      food_out += 0.25;
+    }
+  }
 
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -205,13 +220,13 @@ void loop() {
   lcd.setCursor(8, 1);
   lcd.print(joystick_y);
 
-  Serial.print("Switch:  ");
+  /*Serial.print("Switch:  ");
   Serial.print(joystick_button);
   Serial.print("  X-axis: ");
   Serial.print(joystick_x);
   Serial.print("  Y-axis: ");
   Serial.print(joystick_y);
-  Serial.print("\n");
+  Serial.print("\n");*/
 
 
 
@@ -431,6 +446,7 @@ int recieveIR() {
   }
   return 0;
 }
+
 int getTime() {
   int time_interval = 0;  // Variable to store the time interval
 
@@ -501,7 +517,7 @@ double getFood() {
           }
           break;
 
-         case 0xFFE21D:
+        case 0xFFE21D:
           // Display a confirmation message when the Func button is pressed
           lcd.clear();
           lcd.print("Press Func ");
@@ -530,6 +546,18 @@ double getFood() {
     lcd.print(food_amount);
     lcd.print(" cups");
   }
+}
+
+unsigned long time_elapsed() {
+  unsigned long elapsed_millis = millis();
+  unsigned long hours = elapsed_millis / (1000 * 60 * 60);
+
+  // Print the elapsed time
+  Serial.print("Elapsed time: ");
+  Serial.print(hours);
+  Serial.println(" hours");
+
+  return hours;
 }
 
 
