@@ -35,6 +35,12 @@ const int receiver = 13;  // Signal Pin of IR receiver to Arduino Digital Pin 6
 IRrecv irrecv(receiver);  // create instance of 'irrecv'
 decode_results results;   // create instance of 'decode_results'
 
+//global
+int time_interval;
+double food_amount;
+unsigned long last_dispense_time = 0;
+
+
 void setup() {
   irrecv.enableIRIn();  // Start the receiver
   pinMode(ENABLE, OUTPUT);
@@ -51,10 +57,10 @@ void setup() {
   lcd.print("time");
 
   lcd.clear();
-  int time_interval = getTime();
+  time_interval = getTime();
   Serial.print(time_interval);
-  delay(1000);
-  double food_amount = getFood();
+  delay(100);
+  food_amount = getFood();
   Serial.print(food_amount);
 
   lcd.clear();
@@ -63,15 +69,16 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("every ");
   lcd.print(time_interval);
-  lcd.print(" hours");
+  lcd.print(" minutes");
+  
   delay(5000);
+
 }
 
 //bool dir = 1;
 int state_motor = 0;
 
-int time_interval = 0;
-
+int dispense_at = 0;
 
 int button_pressed = 0;
 //result.value will be lcd key
@@ -92,9 +99,8 @@ bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
 bool joystick_button, last_joystick_button;
 float joystick_x, joystick_y;
 //Amount
-double food_amount = 0;
 double food_out = 0;
-double rotate_amount = food_amount * 4;
+//double rotate_amount = food_amount * 4;
 
 int lcd_counter = 0;
 
@@ -113,9 +119,54 @@ void set_time() {
 }
 
 void loop() {
-  long elapsed_time = time_elapsed();
-  Serial.print(elapsed_time);
-  //Serial.print("Time: ");
+  //unsigned long elapsed_millis = millis();
+  //int elapsed_time = elapsed_millis / (1000 * 60);  // Convert milliseconds to minutes
+  //Serial.print(elapsed_time);
+    dispenseFood();
+  /*if (elapsed_time % time_interval == 0) {
+    lcd.clear();
+    lcd.print("Dispensing");
+    double food_dispensed = 0;
+    while (food_dispensed < food_amount) {
+      spinFor(180, 1);
+      delay(500);
+      spinFor(180, 1);
+      food_dispensed += 0.25;
+    }
+    if (food_amount == food_dispensed){
+      lcd.clear();
+      Serial.print("completed");
+      lcd.print("completed");
+    }
+  }
+
+  /*if (elapsed_time == time_interval) {
+    lcd.clear();
+    lcd.print("Dispensing");
+    while (food_amount <= food_out) {
+      spinFor(180, 1);
+      delay(500);
+      spinFor(180, 1);
+      food_out += 0.25;
+    }
+  }*/
+
+ /* int dispense_at = elapsed_time / time_interval;
+
+  if (elapsed_time == dispense_at) {
+    lcd.clear();
+    lcd.print("Dispensing");
+    while (food_amount <= food_out) {
+      spinFor(180, 1);
+      delay(500);
+      spinFor(180, 1);
+      food_out += 0.25;
+    }
+    if (food_amount == food_out){
+      lcd.print("Complete");
+    }
+  }*/
+
   float t = millis();
   t /= 1000;
   //Serial.print(t, 1);
@@ -195,18 +246,9 @@ void loop() {
   //lcd.print("Interval");
   lcd.setCursor(14, 0);
   lcd.print(time_interval);*/
-  if (elapsed_time == time_interval) {
-    lcd.clear();
-    lcd.print("Dispensing");
-    while (food_amount <= food_out) {
-      spinFor(180, 1);
-      delay(500);
-      spinFor(180, 1);
-      food_out += 0.25;
-    }
-  }
+  
 
-  lcd.clear();
+  /*lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Counter");
   lcd.setCursor(14, 0);
@@ -218,7 +260,7 @@ void loop() {
   lcd.setCursor(0, 1);
   lcd.print(joystick_x);
   lcd.setCursor(8, 1);
-  lcd.print(joystick_y);
+  lcd.print(joystick_y);*/
 
   /*Serial.print("Switch:  ");
   Serial.print(joystick_button);
@@ -267,13 +309,13 @@ void spinFor(float deg, int dir) {
   //{
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(millis() - startMillis);
+  //lcd.print(millis() - startMillis);
 
   delay(timeToSpinFor);
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(millis() - startMillis);
+  //lcd.print(millis() - startMillis);
   //}
   stop();
   state_motor = 0;
@@ -495,7 +537,7 @@ int getTime() {
     lcd.clear();
     lcd.print("Time: ");
     lcd.print(time_interval);
-    lcd.print(" hours");
+    lcd.print(" minutes");
   }
 }
 
@@ -548,18 +590,56 @@ double getFood() {
   }
 }
 
-unsigned long time_elapsed() {
-  unsigned long elapsed_millis = millis();
-  unsigned long hours = elapsed_millis / (1000 * 60 * 60);
+int time_elapsed() {
+  int elapsed_millis = millis();
+  int seconds = elapsed_millis / (1000);
+  int minutes = elapsed_millis / (1000 * 60);
+  int hours = elapsed_millis / (1000 * 60 * 60);
 
   // Print the elapsed time
   Serial.print("Elapsed time: ");
+  Serial.print(minutes);
+  Serial.println(" minutes");
   Serial.print(hours);
   Serial.println(" hours");
 
-  return hours;
+  return minutes;
 }
 
+
+void dispenseFood() {
+  unsigned long current_time = millis();
+  unsigned long elapsed_time = (current_time - last_dispense_time) / (1000 * 60);  // Convert milliseconds to minutes
+  int remaining_time = time_interval - elapsed_time;
+
+  if (remaining_time <= 0) {
+    lcd.clear();
+    lcd.print("Dispensing");
+    Serial.println("Dispensing food...");
+
+    double food_dispensed = 0;
+    while (food_dispensed < food_amount) {
+      spinFor(180, 1);
+      delay(500);
+      spinFor(180, 1);
+      food_dispensed += 0.25;
+      Serial.print("Food dispensed: ");
+      Serial.println(food_dispensed);
+    }
+
+    // Update the last dispense time
+    last_dispense_time = current_time;
+  } else {
+    lcd.clear();
+    lcd.print("Next dispense in ");
+    lcd.setCursor(0, 1);
+    lcd.print(remaining_time);
+    lcd.print(" minutes");
+    Serial.print("Next dispense in ");
+    Serial.print(remaining_time);
+    Serial.println(" minutes");
+  }
+}
 
 
 /*void feeder(rotate_amount){
