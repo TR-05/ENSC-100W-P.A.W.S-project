@@ -49,6 +49,22 @@ void setup() {
   lcd.begin(16, 2);
   // Print a message to the LCD.
   lcd.print("time");
+
+  lcd.clear();
+  int time_interval = getTime();
+  Serial.print(time_interval);
+  delay(1000);
+  double food_amount = getFood();
+  Serial.print(food_amount);
+
+lcd.clear();
+  lcd.print(food_amount);
+  lcd.print(" cups");
+  lcd.setCursor(0,1);
+  lcd.print("every ");
+  lcd.print(time_interval);
+  lcd.print(" hours");
+  delay(5000);
 }
 
 //bool dir = 1;
@@ -69,29 +85,29 @@ bool limit_switch, last_limit_switch;
 //Remote buttons
 bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
   button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
-  button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func, button_Left, last_button_Left, button_Right, last_button_Right;
+  button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func, button_Left, last_button_Left, button_Right, last_button_Right,
+  last_button_ST, button_ST;
 bool joystick_button, last_joystick_button;
 float joystick_x, joystick_y;
 //Amount
-float cup_amount = 0;
-float user_amount = 0;
-float rotate_amount = user_amount * 4;
+double food_amount = 0;
+double rotate_amount = food_amount * 4;
 
 int lcd_counter = 0;
 
-int user_time(){
-    lcd.setCursor(0,0);
-    if (joystick_x > 0){
-      lcd_counter++;
-      delay(200);
-      return lcd_counter;
-    }
+int user_time() {
+  lcd.setCursor(0, 0);
+  if (joystick_x > 0) {
+    lcd_counter++;
+    delay(200);
+    return lcd_counter;
   }
-  //joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
-  void set_time(){
-     lcd.setCursor(0, 0);
-     lcd.print(user_time());
-  }
+}
+//joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
+void set_time() {
+  lcd.setCursor(0, 0);
+  lcd.print(user_time());
+}
 
 void loop() {
   //Serial.print("Time: ");
@@ -125,24 +141,16 @@ void loop() {
     spinBackward(255);
   }
 
-  if (button_Up != last_button_Up && button_Up) {
-    lcd_counter++;
-    Serial.println(lcd_counter);
-  }
 
-    if (joystick_y > 0) 
-    {
+  if (joystick_y > 0) {
     float speed = map(joystick_y, 0, 100, 50, 255);
     spinForward(speed);
-    } 
-    else if (joystick_y < 0)
-    {
+  } else if (joystick_y < 0) {
     float speed = map(joystick_y, 0, -100, 50, 255);
-      spinBackward(speed);
-    }
-    else {
-      stop();
-    }
+    spinBackward(speed);
+  } else {
+    stop();
+  }
   if (joystick_button != last_joystick_button && joystick_button) {
     spinFor(180, 1);
     delay(1000);
@@ -150,17 +158,22 @@ void loop() {
     lcd_counter++;
   }
 
-  if (button_Down != last_button_Down && button_Down) {
-    lcd_counter--;
+  /*if (button_Up != last_button_Up && button_Up) {
+    food_amount += 0.25;
+    
   }
 
-  if (button_Right != last_button_Right && button_Right){
+  if (button_Down != last_button_Down && button_Down && food_amount > 0)  {
+    food_amount -= 0.25;
+  }
+
+  if (button_Right != last_button_Right && button_Right) {
     time_interval++;
   }
 
-  if (button_Left != last_button_Left && button_Left && time_interval > 0){
+  if (button_Left != last_button_Left && button_Left && time_interval > 0) {
     time_interval--;
-  }
+  }*/
 
 
   limit_switch = !digitalRead(limit_switch_port);
@@ -174,8 +187,8 @@ void loop() {
 
   lcd.clear();
   lcd.setCursor(0, 0);
-  //lcd.print("Interval");    
-  lcd.setCursor(14, 0);    
+  //lcd.print("Interval");
+  lcd.setCursor(14, 0);
   lcd.print(time_interval);
 
   lcd.clear();
@@ -200,22 +213,7 @@ void loop() {
   Serial.print(joystick_y);
   Serial.print("\n");
 
-  lcd.clear();
-  getTime();
-  lcd.print("Interval: ");
-  lcd.setCursor(10,0);
-  lcd.print("spins");
-  lcd.setCursor(0, 1);
-  lcd.print("every  ");
-  lcd.print(time_interval);
-  lcd.setCursor(10, 1);
-  if (time_interval <= 1){
-      lcd.print("hour");
-    }
-    else{
-      lcd.print("hours");
-    }
-  
+
 
 
   last_limit_switch = limit_switch;
@@ -229,6 +227,10 @@ void loop() {
   last_joystick_button = joystick_button;
   last_button_Right = button_Right;
   last_button_Left = button_Left;
+  last_button_ST = button_ST;
+  last_button_Down = button_Down;
+  last_button_Up = button_Up;
+  last_button_Func = button_Func;
   delay(20);
 }
 
@@ -290,14 +292,14 @@ void print(String display) {
   lcd.print(display);
 }
 void spinForward(float velocity) {
-  analogWrite(ENABLE,velocity); //enable on
-  digitalWrite(DIRA, HIGH);    //one way
+  analogWrite(ENABLE, velocity);  //enable on
+  digitalWrite(DIRA, HIGH);       //one way
   digitalWrite(DIRB, LOW);
 }
 
 void spinBackward(float velocity) {
-  analogWrite(ENABLE,velocity); //enable on
-  digitalWrite(DIRA, LOW);     //one way
+  analogWrite(ENABLE, velocity);  //enable on
+  digitalWrite(DIRA, LOW);        //one way
   digitalWrite(DIRB, HIGH);
 }
 void spin(bool forward) {
@@ -344,6 +346,8 @@ int recieveIR() {
   button_Func = false;
   button_Left = false;
   button_Right = false;
+  button_ST = false;
+  button_Func = false;
 
   if (irrecv.decode(&results))  // have we received an IR signal?
 
@@ -392,7 +396,7 @@ int recieveIR() {
         button_EQ = true;
         break;
       case 0xFFB04F:  // ST/REPT
-        button_VolUp = true;
+        button_ST = true;
         break;
       case 0xFF30CF:  // 1
         button_1 = true;
@@ -427,34 +431,108 @@ int recieveIR() {
   }
   return 0;
 }
-void getTime(){
- if (irrecv.decode(&results)) {
-    switch (results.value) {
-      case 0xFFC23D: //button right
-        // Increment the time interval when the right button is pressed
-        time_interval++;
-        lcd.clear();
-        lcd.print("Interval: ");
-        lcd.print(time_interval);
-       
+int getTime() {
+  int time_interval = 0;  // Variable to store the time interval
 
-      case 0xFF22DD:
-        // Decrement the time interval when the left button is pressed
-        if (time_interval > 0) {
-          time_interval--;
+  while (true) {
+    if (irrecv.decode(&results)) {
+      switch (results.value) {
+        case 0xFFC23D:
+          // Increment the time interval when the right button is pressed
+          time_interval++;
+          break;
+
+        case 0xFF22DD:
+          // Decrement the time interval when the left button is pressed
+          if (time_interval > 0) {
+            time_interval--;
+          }
+          break;
+
+        case 0xFFB04F:
+          // Display a confirmation message when the ST button is pressed
           lcd.clear();
-          lcd.print("Interval: ");
-          lcd.print(time_interval);
-        }
-     
+          lcd.print("Press ST ");
+          lcd.setCursor(0, 1);
+          lcd.print("to confirm");
+          irrecv.resume();  // Receive the next value
 
-      default:
-        break;
+          // Wait for the next ST button press
+          while (true) {
+            if (irrecv.decode(&results)) {
+              if (results.value == 0xFFB04F) {
+                // Return the time interval when ST button is pressed again
+                return time_interval;
+              }
+              irrecv.resume();  // Receive the next value
+            }
+          }
+          break;
+
+        default:
+          break;
+      }
+      irrecv.resume();  // Receive the next value
     }
 
-    irrecv.resume();  // Receive the next value
+    // Display the current time interval
+    lcd.clear();
+    lcd.print("Time: ");
+    lcd.print(time_interval);
+    lcd.print(" hours");
   }
 }
+
+double getFood() {
+  double food_amount = 0;  // Variable to store the food amount
+
+  while (true) {
+    if (irrecv.decode(&results)) {
+      switch (results.value) {
+        case 0xFF906F:  //button up
+          // Increment the food amount when the up button is pressed
+          food_amount += 0.25;
+          break;
+
+        case 0xFFE01F:
+          // Decrement the food amount when the down button is pressed by 1/4 cup
+          if (food_amount > 0) {
+            food_amount -= .25;
+          }
+          break;
+
+         case 0xFFE21D:
+          // Display a confirmation message when the Func button is pressed
+          lcd.clear();
+          lcd.print("Press Func ");
+          lcd.setCursor(0, 1);
+          lcd.print("to confirm");
+          irrecv.resume();  // Receive the next value
+
+          // Wait for the next func button press
+          while (true) {
+            if (irrecv.decode(&results)) {
+              if (results.value == 0xFFE21D) {
+                // Return the time interval when Func button is pressed again
+                return food_amount;
+              }
+              irrecv.resume();  // Receive the next value
+            }
+          }
+          break;
+      }
+      irrecv.resume();  // Receive the next value
+    }
+
+    // Display the current food amount
+    lcd.clear();
+    lcd.print("Food: ");
+    lcd.print(food_amount);
+    lcd.print(" cups");
+  }
+}
+
+
 
 /*void feeder(rotate_amount){
   do{
