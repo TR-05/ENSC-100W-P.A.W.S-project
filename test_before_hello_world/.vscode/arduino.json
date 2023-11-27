@@ -1,0 +1,4 @@
+{
+    "sketch": "test_before_hello_world.ino",
+    "board": "arduino:avr:uno"
+}
