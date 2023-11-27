@@ -37,7 +37,7 @@ decode_results results;   // create instance of 'decode_results'
 
 
 //global
-int time_interval;
+int time_interval = 10;
 double food_amount;
 unsigned long last_dispense_time = 0;
 int set_upTime = millis();
@@ -95,7 +95,7 @@ void setup() {
   pinMode(limit_switch_port, INPUT_PULLUP);
   pinMode(SW_pin, INPUT_PULLUP);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
@@ -117,7 +117,7 @@ void setup() {
   lcd.print(time_interval);
   lcd.print(" minutes");
   time_interval = time_interval*(millis()/(1000* 60));
-  delay(5000);
+  delay(2000);
 }
 
 void loop() {
@@ -141,25 +141,32 @@ void loop() {
       lcd.print("completed");
     }
   }*/
-int current_time = millis()/(1000);
+float current_time = millis()/(1000.0);
 Serial.print(set_upTime/1000);
 Serial.print("Current time: ");
 Serial.println(current_time - (set_upTime/1000));
-delay(1000);
-if ((current_time % time_interval) == 0) {
+//delay(1000);
+int current_time_int = current_time;
+if ((fmod(current_time, 5.0)) < 1) {
   lcd.clear();
   lcd.print("Dispensing");
-  while (food_amount <= food_out) {
-    spinFor(180, 1);
-    delay(500);
-    spinFor(180, 1);
-    food_out += 0.25;
-  }
-  if (food_amount == food_out){
-    lcd.clear();
-    lcd.print("complete");
-  }
+  //while (food_amount <= food_out) {
+    //spinFor(180, 1);
+    //delay(500);
+    //spinFor(180, 1);
+    //food_out += 0.25;
+    //delay(100);
+  //}
+  //if (food_amount == food_out){
+    //lcd.clear();
+   // lcd.print("complete");
+  //}
+  //delay(2000);
+} else {
+  lcd.clear();
+  lcd.print("not dispensing");
 }
+
  /* int dispense_at = elapsed_time / time_interval;
   if (elapsed_time == dispense_at) {
     lcd.clear();

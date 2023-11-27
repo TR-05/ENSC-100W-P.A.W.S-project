@@ -17,7 +17,7 @@
 
 // include the library code:
 #include <LiquidCrystal.h>
-#include <IRremote.h>
+#include "IRremote.h"
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
@@ -93,7 +93,7 @@ void setup() {
   pinMode(limit_switch_port, INPUT_PULLUP);
   pinMode(SW_pin, INPUT_PULLUP);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.print(10);
   Serial.print("\n");
   // set up the LCD's number of columns and rows:
