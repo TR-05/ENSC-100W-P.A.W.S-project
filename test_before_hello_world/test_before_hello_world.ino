@@ -46,8 +46,6 @@ int set_upTime = millis();
 //bool dir = 1;
 int state_motor = 0;
 
-
-
 int button_pressed = 0;
 //result.value will be lcd key
 
@@ -96,7 +94,8 @@ void setup() {
   pinMode(SW_pin, INPUT_PULLUP);
 
   Serial.begin(9600);
-
+  Serial.print(10);
+  Serial.print("\n");
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   // Print a message to the LCD.
