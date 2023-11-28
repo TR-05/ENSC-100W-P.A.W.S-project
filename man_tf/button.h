@@ -41,7 +41,6 @@ public:
         return result;
     }
     
-private:
     bool lastState = false;
     bool currentState = false;
     int pin;

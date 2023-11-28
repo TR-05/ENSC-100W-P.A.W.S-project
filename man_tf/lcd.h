@@ -17,6 +17,9 @@ namespace LCD
         topRow = TopRow;
         bottomRow = BottomRow;
     }
+    void clear() {
+        lcd.clear();
+    }
     void update()
     {
         lcd.clear();
@@ -31,10 +34,10 @@ namespace LCD
         bottomRow = BottomRow;
         update();
     }
-    void print(int cursorColumn, int cursorRow, float value)
+    void print(int cursorColumn, int cursorRow, float value, int digits)
     {
         lcd.setCursor(cursorColumn, cursorRow);
-        lcd.print(value);
+        lcd.print(value, digits);
     }
 }
 

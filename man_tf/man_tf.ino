@@ -5,6 +5,7 @@
 #include "button.h"
 #include "foodDispensing.h"
 #include "ir.h"
+#include "time.h"
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
@@ -30,100 +31,48 @@ void set_time()
 
 button limit_switch(limit_switch_port);
 button joystick(joystick_button_port);
+
+void initalizeDispenser() {
+  Serial.print(dispense::getTime());
+  Serial.print("\n\n");
+  delay(2000);
+  Serial.print(dispense::getFoodAmount());
+  Serial.print("\n\n");
+
+  LCD::print("     Cups", "every      Min");
+  LCD::print(0,0, dispense::food_amount, 2);
+  LCD::print(6,1, dispense::time_interval, 2);
+  delay(3000);
+  time::set_up_time_ms = millis() - 1001;
+}
 void setup()
 {
   Serial.begin(115200);
   motor.initialize();
   IR::intialize();
   LCD::initialize();
-  Serial.print(dispense::getTime());
-  Serial.print("\n\n");
-  LCD::print("Confirmed", "     Minutes");
-  LCD::print(0, 1, dispense::time_interval);
-
-
-  LCD::set("time", "");
-  LCD::topRow = " cups:";
-  LCD::update();
-  Serial.print(dispense::time_interval);
-  // delay(1000);
-  // food_amount = getFood();
-  Serial.print(dispense::food_amount);
-
-  lcd.print(dispense::food_amount);
-  lcd.print(" cups");
-  lcd.setCursor(0, 1);
-  lcd.print("every ");
-  lcd.print(dispense::time_interval);
-  lcd.print(" minutes");
-  dispense::time_interval = dispense::time_interval * (millis() / (1000 * 60));
+  initalizeDispenser();
+  limit_switch.newPress();
+  if (limit_switch.currentState == false) {
+    motor.CycleWheel(255);
+  }
 }
 
 void loop()
 {
   IR::recieveIR();
+  LCD::clear();
+  time::update();
+  LCD::print(0,0, time::time_ms, 0);
+  LCD::print(8,0, time::time_s, 1);
+  LCD::print(0,1, time::time_m, 2);
+  LCD::print(8,1, time::time_h, 3);
 
-  // unsigned long elapsed_millis = millis();
-  // int elapsed_time = elapsed_millis / (1000 * 60);  // Convert milliseconds to minutes
-  // Serial.print(elapsed_time);
-  // dispenseFood();
-  /*if (elapsed_time % time_interval == 0) {
-    lcd.clear();
-    lcd.print("Dispensing");
-    double food_dispensed = 0;
-    while (food_dispensed < food_amount) {
-      spinFor(180, 1);
-      delay(500);
-      spinFor(180, 1);
-      food_dispensed += 0.25;
-    }
-    if (food_amount == food_dispensed){
-      lcd.clear();
-      Serial.print("completed");
-      lcd.print("completed");
-    }
-  }*/
-  float current_time = millis() / (1000.0);
-  Serial.print("Current time: ");
-  // delay(1000);
-  int current_time_int = current_time;
-  if ((fmod(current_time, 5.0)) < 1)
-  {
-    // lcd.clear();
-    // lcd.print("Dispensing");
-    // while (food_amount <= food_out) {
-    // spinFor(180, 1);
-    // delay(500);
-    // spinFor(180, 1);
-    // food_out += 0.25;
-    // delay(100);
-    //}
-    // if (food_amount == food_out){
-    // lcd.clear();
-    // lcd.print("complete");
-    //}
-    // delay(2000);
-  }
-  else
-  {
-    // lcd.clear();
-    // lcd.print("not dispensing");
+  if (IR::func.newPress(true)) {
+    initalizeDispenser();
   }
 
-  /* int dispense_at = elapsed_time / time_interval;
-   if (elapsed_time == dispense_at) {
-     lcd.clear();
-     lcd.print("Dispensing");
-     while (food_amount <= food_out) {
-       spinFor(180, 1);
-       delay(500);
-       spinFor(180, 1);
-       food_out += 0.25;
-     }
-     if (food_amount == food_out){
-       lcd.print("Complete");
-     }
-   }*/
+  time::checkForDispense(dispense::time_interval, 255, dispense::food_amount);
 
   joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
   joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
@@ -135,7 +84,7 @@ void loop()
   // testing little function
   if (IR::EQ.newPress(true))
   {
-    motor.CycleWheel();
+    motor.spinFor(180, 255, 1);
   }
 
   if (IR::power.newPress(true))
@@ -178,7 +127,7 @@ void loop()
 
   if (joystick.newPress())
   {
-    motor.CycleWheel();
+    motor.CycleWheel(255);
     lcd_counter++;
   }
 
@@ -227,8 +176,6 @@ void loop()
   Serial.print(joystick_y);
   Serial.print("\n");*/
 
-  LCD::set("time", "");
-  LCD::update();
   delay(20);
 }
 

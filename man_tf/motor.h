@@ -9,9 +9,9 @@ public:
     const int ENABLE = 5;
     const int DIRA = 3;
     const int DIRB = 4;
-    const int motorMaxRPM = 6372;
-    const int outputGearRPM = 35.4;
-    const int ratio = outputGearRPM / motorMaxRPM;
+    const float motorMaxRPM = 6372;
+    const float outputGearRPM = 34.3;
+    const float ratio = outputGearRPM / motorMaxRPM;
 
     void initialize()
     {
@@ -61,19 +61,35 @@ public:
             return;
         }
         int timeToSpinFor = rotationTimeMs(deg, speed);
-        int startMillis = millis();
+        int motorStartMillis = millis();
         int loopCounter = 0;
-        while (millis() - startMillis < timeToSpinFor)
+
+        Serial.print("Time to spin for: ");
+        Serial.print(timeToSpinFor);
+        Serial.print("\n startMillis");
+        Serial.print(motorStartMillis);
+        Serial.print("\n millis");
+        Serial.print(millis());
+
+        Serial.print("\n loop condition: ");
+        Serial.print(millis() - motorStartMillis < timeToSpinFor);
+
+        Serial.print("\n\n\n");
+
+        while (millis() - motorStartMillis < timeToSpinFor)
         {
+        Serial.print("\nlooping");
             delay(10);
         }
+        spin(255, true);
+        delay(70);
         spin(0);
-        delay(200);
+        Serial.print("\ndone");
     }
 
-    void CycleWheel()
+    void CycleWheel(int speed)
     {
-        spin(255, false);
+        spin(speed, false);
 
         bool limit_switch_pressed = !digitalRead(limit_switch_port);
         ;
@@ -96,7 +112,7 @@ public:
         }
 
         spin(255, true);
-        delay(90);
+        delay(70);
         spin(0);
         LCD::set("Stopped", "1");
         LCD::update();
@@ -109,6 +125,9 @@ public:
         float output = rotations_of_motor / desiredRPM;
         output *= 60;
         output *= 1000;
+        Serial.print("\nTime MS: ");
+        Serial.print(output);
+        Serial.print("\n");
         return int(output);
     }
 };
