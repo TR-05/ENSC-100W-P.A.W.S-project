@@ -33,7 +33,8 @@ namespace IR
         irrecv.enableIRIn(); // Start the receiver
     }
 
-    int recieveIR()
+
+    bool recieveIR()
     {
         volUp.off();
         volUp.off();
@@ -56,10 +57,10 @@ namespace IR
         func.off();
         play.off();
         EQ.off();
-
+        bool output = false;
         if (irrecv.decode(&results)) // have we received an IR signal?
-
         {
+            output = true;
             // Serial.print("New Press: ");
             // Serial.print(results.value, HEX);
             // Serial.println();
@@ -134,7 +135,7 @@ namespace IR
 
             irrecv.resume(); // receive the next value
         }
-        return 0;
+        return output;
     }
 
 }

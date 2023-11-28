@@ -83,23 +83,23 @@ public:
             limit_switch_pressed = !digitalRead(limit_switch_port);
             if (limit_switch_pressed != last_limit_switch_pressed && limit_switch_pressed)
             {
-                lcd1.set("Done", "1");
+                LCD::set("Done", "1");
                 break;
             }
             else
             {
-                lcd1.set("Spinning", "0");
+                LCD::set("Spinning", "0");
             }
             last_limit_switch_pressed = limit_switch_pressed;
             delay(10);
-            lcd1.update();
+            LCD::update();
         }
 
         spin(255, true);
         delay(90);
         spin(0);
-        lcd1.set("Stopped", "1");
-        lcd1.update();
+        LCD::set("Stopped", "1");
+        LCD::update();
     }
     int rotationTimeMs(float degrees, float speed)
     {

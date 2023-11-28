@@ -1,11 +1,41 @@
 #pragma once
 #include "lcd.h"
-
+#include "ir.h"
 namespace dispense {
 
-float getFoodAmount()
+float time_interval = 0;
+float food_amount = 0;
+int getTime()
 {
-    return 0.0;
+
+  while (true)
+  {
+    LCD::print("Time: ", "Minutes");
+    LCD::print(7, 0, time_interval);
+    if (IR::recieveIR())
+    {
+      if (IR::right.newPress(true))
+      {
+        time_interval++;
+      }
+      if (IR::right.newPress(true) && time_interval > 0)
+      {
+        time_interval--;
+      }
+      if (IR::st.newPress(true))
+      {
+        LCD::set("", "Confirmed");
+        LCD::update();
+        break;
+      }
+    }
+    delay(20);
+  }
+
+  // Display the current time interval
+  LCD::print("Time: ", " minutes");
+  LCD::print(7, 0, time_interval);
+  return time_interval;
 }
 
 

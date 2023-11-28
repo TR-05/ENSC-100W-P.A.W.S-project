@@ -3,15 +3,19 @@
 
 extern LiquidCrystal lcd;
 
-class LCD
+namespace LCD
 {
-public:
     String topRow = "null";
     String bottomRow = "null";
-    void set(String topRow, String bottomRow)
+
+    void initialize() {
+          lcd.begin(16, 2);
+    }
+
+    void set(String TopRow, String BottomRow)
     {
-        this->topRow = topRow;
-        this->bottomRow = bottomRow;
+        topRow = TopRow;
+        bottomRow = BottomRow;
     }
     void update()
     {
@@ -21,9 +25,18 @@ public:
         lcd.setCursor(0, 1);
         lcd.print(bottomRow);
     }
-};
-LCD lcd1;
-
+    void print(String TopRow, String BottomRow)
+    {
+        topRow = TopRow;
+        bottomRow = BottomRow;
+        update();
+    }
+    void print(int cursorColumn, int cursorRow, float value)
+    {
+        lcd.setCursor(cursorColumn, cursorRow);
+        lcd.print(value);
+    }
+}
 
 /*
   The circuit:
