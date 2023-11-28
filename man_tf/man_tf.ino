@@ -3,6 +3,8 @@
 #include "lcd.h"
 #include "motor.h"
 #include "serial.h"
+#include "button.h"
+#include "foodDispensing.h"
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 IRrecv irrecv(receiver);  // create instance of 'irrecv'
@@ -14,29 +16,11 @@ double food_amount;
 unsigned long last_dispense_time = 0;
 int set_upTime = millis();
 
-
-//bool dir = 1;
-int state_motor = 0;
-
-
-
-int button_pressed = 0;
-//result.value will be lcd key
-
-float motor_rpm = 6372;
-float output_rpm = 35.4;
-float gear_ratio = motor_rpm / output_rpm * 1;
-int acel_time = 0;
-
-//vex limit switch
-bool limit_switch, last_limit_switch;
-
 //Remote buttons
 bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
   button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
   button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func, button_Left, last_button_Left, button_Right, last_button_Right,
   last_button_ST, button_ST;
-bool joystick_button, last_joystick_button;
 float joystick_x, joystick_y;
 //Amount
 double food_out = 0;
@@ -58,12 +42,14 @@ void set_time() {
   lcd.print(user_time());
 }
 
-
+button limit_switch(limit_switch_port);
+button joystick(joystick_button_port);
 void setup() {
   irrecv.enableIRIn();  // Start the receiver
-  pinMode(limit_switch_port, INPUT_PULLUP);
-  pinMode(SW_pin, INPUT_PULLUP);
   motor.initialize();
+
+  dispense::getFoodAmount();
+
   Serial.begin(115200);
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
@@ -84,7 +70,6 @@ void setup() {
   lcd.print(time_interval);
   lcd.print(" minutes");
   time_interval = time_interval*(millis()/(1000* 60));
-  //delay(2000);
 }
 
 void loop() {
@@ -115,8 +100,8 @@ Serial.println(current_time - (set_upTime/1000));
 //delay(1000);
 int current_time_int = current_time;
 if ((fmod(current_time, 5.0)) < 1) {
-  lcd.clear();
-  lcd.print("Dispensing");
+  //lcd.clear();
+  //lcd.print("Dispensing");
   //while (food_amount <= food_out) {
     //spinFor(180, 1);
     //delay(500);
@@ -130,8 +115,8 @@ if ((fmod(current_time, 5.0)) < 1) {
   //}
   //delay(2000);
 } else {
-  lcd.clear();
-  lcd.print("not dispensing");
+  //lcd.clear();
+  //lcd.print("not dispensing");
 }
 
  /* int dispense_at = elapsed_time / time_interval;
@@ -148,11 +133,7 @@ if ((fmod(current_time, 5.0)) < 1) {
       lcd.print("Complete");
     }
   }*/
-  float t = millis();
-  t /= 1000;
-  //Serial.print(t, 1);
-  //Serial.println();
-  joystick_button = !digitalRead(SW_pin);
+
   joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
   joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
   if (fabs(joystick_x) < 6) joystick_x = 0;
@@ -161,23 +142,22 @@ if ((fmod(current_time, 5.0)) < 1) {
   recieveIR();
   //testing little function
   if (last_button_EQ != button_EQ && button_EQ) {
-    spinFor(360, -1);
+    motor.CycleWheel();
   }
 
   if (last_button_power != button_power && button_power) {
-    stop();
+    motor.spin(0);
   }
 
   if (last_button_0 != button_0 && button_0) {
-    stop();
+    motor.spin(0);
   }
   if (last_button_1 != button_1 && button_1) {
-    spinForward(255);
+    motor.spin(255, false);
   }
   if (last_button_2 != button_2 && button_2) {
-    spinBackward(255);
+    motor.spin(255, true);
   }
-
 
   if (joystick_y > 0) {
     float speed = map(joystick_y, 0, 100, 50, 255);
@@ -189,12 +169,11 @@ if ((fmod(current_time, 5.0)) < 1) {
     motor.spin(0);
   }
 
-    limit_switch = !digitalRead(limit_switch_port);
-  if (limit_switch != last_limit_switch && limit_switch) {
+  if (limit_switch.newPress()) {
     lcd_counter++;
   }
 
-  if (joystick_button != last_joystick_button && joystick_button) {
+  if (joystick.newPress()) {
     motor.CycleWheel();
     lcd_counter++;
   }
@@ -249,9 +228,6 @@ if ((fmod(current_time, 5.0)) < 1) {
   Serial.print("\n");*/
 
 
-
-
-  last_limit_switch = limit_switch;
   last_button_VolDown = button_VolDown;
   last_button_VolUp = button_VolUp;
   last_button_EQ = button_EQ;
@@ -259,113 +235,15 @@ if ((fmod(current_time, 5.0)) < 1) {
   last_button_0 = button_0;
   last_button_1 = button_1;
   last_button_2 = button_2;
-  last_joystick_button = joystick_button;
   last_button_Right = button_Right;
   last_button_Left = button_Left;
   last_button_ST = button_ST;
   last_button_Down = button_Down;
   last_button_Up = button_Up;
   last_button_Func = button_Func;
+  lcd1.set("time", "");
+  lcd1.update();
   delay(20);
-}
-
-void spinFor(float deg, int dir) {
-
-  stop();
-  delay(200);
-  if (dir == 1) {
-    spinForward(255);
-  }
-  if (dir == -1) {
-    spinBackward(255);
-  }
-  if (dir == 0) stop();
-  int timeToSpinFor = rotationTime(deg) + acel_time;
-  int startMillis = millis();
-  int loopCounter = 0;
-  //while(millis() - startMillis < timeToSpinFor)
-  //{
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(millis() - startMillis);
-
-  delay(timeToSpinFor);
-
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(millis() - startMillis);
-  //}
-  stop();
-  state_motor = 0;
-  delay(200);
-}
-
-
-int rotationTime(float degrees) {
-  float targetRotations = degrees / 360;
-  float rotations_of_motor = targetRotations * gear_ratio;
-  float output = motor_rpm / rotations_of_motor;
-  output /= 60;
-  output = 1 / output;
-  Serial.print("output seconds: ");
-  Serial.print(output);
-  Serial.print(" input: ");
-  Serial.print(degrees);
-  output *= 1000;
-
-  // prints a tab
-  Serial.println();
-
-  return int(output);
-}
-
-void print(String display) {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(millis() / 1000);
-  lcd.setCursor(0, 1);
-  lcd.print(display);
-}
-void spinForward(float velocity) {
-  analogWrite(motor.ENABLE, velocity);  //enable on
-  digitalWrite(motor.DIRA, HIGH);       //one way
-  digitalWrite(motor.DIRB, LOW);
-}
-
-void spinBackward(float velocity) {
-  analogWrite(motor.ENABLE, velocity);  //enable on
-  digitalWrite(motor.DIRA, LOW);        //one way
-  digitalWrite(motor.DIRB, HIGH);
-}
-void spin(bool forward) {
-  digitalWrite(motor.ENABLE, HIGH);  //enable on
-  if (forward) {
-    digitalWrite(motor.DIRA, HIGH);  //one way
-    digitalWrite(motor.DIRB, LOW);
-  } else {
-    digitalWrite(motor.DIRA, LOW);  //one way
-    digitalWrite(motor.DIRB, HIGH);
-  }
-}
-
-void stop() {
-  digitalWrite(motor.DIRA, LOW);  //fast stop
-  digitalWrite(motor.DIRB, LOW);  //fast stop
-}
-
-void cycleMotor() {
-  state_motor++;
-  if (state_motor > 1) {
-    state_motor = -1;
-  }
-
-  if (state_motor == 1) {
-    spinForward(255);
-  } else if (state_motor == -1) {
-    spinBackward(255);
-  } else {
-    stop();
-  }
 }
 
 int recieveIR() {
@@ -398,7 +276,6 @@ int recieveIR() {
 
       case 0xFFA857:  // VOL- button pressed
         button_VolDown = true;
-        button_pressed = 0xFFA857;
         break;
       case 0xFF629D:  // VOL+ button pressed
         button_VolUp = true;
@@ -569,48 +446,3 @@ double getFood() {
     lcd.print(" cups");
   }
 }
-
-
-/*int time_elapsed() {
-  int elapsed_millis = millis();
-  int seconds = elapsed_millis / (1000);
-  int minutes = elapsed_millis / (1000 * 60);
-  int hours = elapsed_millis / (1000 * 60 * 60);
-
-  // Print the elapsed time
-  Serial.print("Elapsed time: ");
-  Serial.print(minutes);
-  Serial.println(" minutes");
-  Serial.print(hours);
-  Serial.println(" hours");
-
-  return minutes;
-}*/
-
-void dispenseFood() {
-  unsigned long current_time = millis()/(1000);
-  delay(1000);
-  Serial.print(set_upTime/1000);
-  Serial.print("Current time: ");
-  Serial.println(current_time - (set_upTime/1000));
-  /*Serial.print("Last dispense time: ");
-  Serial.println(last_dispense_time);
-
-  unsigned long elapsed_time = (current_time - last_dispense_time) / (1000 * 60);  // Convert milliseconds to minutes
-  int remaining_time = time_interval - elapsed_time;
-
-  Serial.print("Elapsed time: ");
-  Serial.println(elapsed_time);
-  Serial.print("Remaining time: ");
-  Serial.println(remaining_time);
-  if (remaining_time <= 0) {
-
-  } else {
-    // Print remaining time to LCD and Serial monitor
-    // ...
-  }*/
-}
-
-
-
-
