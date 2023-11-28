@@ -1,36 +1,11 @@
-/*
-  The circuit:
- * LCD RS pin to digital pin 7
- * LCD Enable pin to digital pin 8
- * LCD D4 pin to digital pin 9
- * LCD D5 pin to digital pin 10
- * LCD D6 pin to digital pin 11
- * LCD D7 pin to digital pin 12
- * LCD R/W pin to ground
- * LCD VSS pin to ground
- * LCD VCC pin to 5V
- * 10K resistor:
- * ends to +5V and ground
- * wiper to LCD VO pin (pin 3)
- http://www.arduino.cc/en/Tutorial/LiquidCrystal
- */
-
-// include the library code:
-#include <LiquidCrystal.h>
-
 #include "IRremote.h"
+#include "lcd.h"
+#include "motor.h"
+#include "serial.h"
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
-#define ENABLE 5
-#define DIRA 3
-#define DIRB 4
-const int SW_pin = 6;             // digital pin connected to switch output
-const int X_pin = A0;             // analog pin connected to X output
-const int Y_pin = A1;             // analog pin connected to Y output
-const int limit_switch_port = 2;  // direction control button is connected to Arduino pin 4
-//const int rightButton = 13;        // direction control button is connected to Arduino pin 4
-const int receiver = 13;  // Signal Pin of IR receiver to Arduino Digital Pin 6
+
 
 IRrecv irrecv(receiver);  // create instance of 'irrecv'
 decode_results results;   // create instance of 'decode_results'
@@ -89,27 +64,22 @@ void set_time() {
 
 void setup() {
   irrecv.enableIRIn();  // Start the receiver
-  pinMode(ENABLE, OUTPUT);
-  pinMode(DIRA, OUTPUT);
-  pinMode(DIRB, OUTPUT);
   pinMode(limit_switch_port, INPUT_PULLUP);
   pinMode(SW_pin, INPUT_PULLUP);
-
+  motor.initialize();
   Serial.begin(115200);
-
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   // Print a message to the LCD.
-  lcd.print("time");
-
-  lcd.clear();
-  time_interval = getTime();
+  lcd1.set("time", "");
+  lcd1.topRow = " cups:";
+  lcd1.update();
+  //time_interval = getTime();
   Serial.print(time_interval);
-  delay(1000);
-  food_amount = getFood();
+  //delay(1000);
+  //food_amount = getFood();
   Serial.print(food_amount);
 
-  lcd.clear();
   lcd.print(food_amount);
   lcd.print(" cups");
   lcd.setCursor(0, 1);
@@ -117,7 +87,7 @@ void setup() {
   lcd.print(time_interval);
   lcd.print(" minutes");
   time_interval = time_interval*(millis()/(1000* 60));
-  delay(2000);
+  //delay(2000);
 }
 
 void loop() {
@@ -214,17 +184,21 @@ if ((fmod(current_time, 5.0)) < 1) {
 
   if (joystick_y > 0) {
     float speed = map(joystick_y, 0, 100, 50, 255);
-    spinForward(speed);
+    motor.spin(speed);
   } else if (joystick_y < 0) {
     float speed = map(joystick_y, 0, -100, 50, 255);
-    spinBackward(speed);
+    motor.spin(speed, true);
   } else {
-    stop();
+    motor.spin(0);
   }
+
+    limit_switch = !digitalRead(limit_switch_port);
+  if (limit_switch != last_limit_switch && limit_switch) {
+    lcd_counter++;
+  }
+
   if (joystick_button != last_joystick_button && joystick_button) {
-    spinFor(180, 1);
-    delay(1000);
-    spinFor(180, 1);
+    motor.CycleWheel();
     lcd_counter++;
   }
 
@@ -246,14 +220,7 @@ if ((fmod(current_time, 5.0)) < 1) {
   }*/
 
 
-  limit_switch = !digitalRead(limit_switch_port);
-  if (limit_switch != last_limit_switch && limit_switch) {
-    spinFor(180, 1);
-    delay(500);
-    spinFor(180, 1);
-    lcd_counter++;
-    //Serial.println(lcd_counter);
-  }
+
 
   /*lcd.clear();
   lcd.setCursor(0, 0);
@@ -363,30 +330,30 @@ void print(String display) {
   lcd.print(display);
 }
 void spinForward(float velocity) {
-  analogWrite(ENABLE, velocity);  //enable on
-  digitalWrite(DIRA, HIGH);       //one way
-  digitalWrite(DIRB, LOW);
+  analogWrite(motor.ENABLE, velocity);  //enable on
+  digitalWrite(motor.DIRA, HIGH);       //one way
+  digitalWrite(motor.DIRB, LOW);
 }
 
 void spinBackward(float velocity) {
-  analogWrite(ENABLE, velocity);  //enable on
-  digitalWrite(DIRA, LOW);        //one way
-  digitalWrite(DIRB, HIGH);
+  analogWrite(motor.ENABLE, velocity);  //enable on
+  digitalWrite(motor.DIRA, LOW);        //one way
+  digitalWrite(motor.DIRB, HIGH);
 }
 void spin(bool forward) {
-  digitalWrite(ENABLE, HIGH);  //enable on
+  digitalWrite(motor.ENABLE, HIGH);  //enable on
   if (forward) {
-    digitalWrite(DIRA, HIGH);  //one way
-    digitalWrite(DIRB, LOW);
+    digitalWrite(motor.DIRA, HIGH);  //one way
+    digitalWrite(motor.DIRB, LOW);
   } else {
-    digitalWrite(DIRA, LOW);  //one way
-    digitalWrite(DIRB, HIGH);
+    digitalWrite(motor.DIRA, LOW);  //one way
+    digitalWrite(motor.DIRB, HIGH);
   }
 }
 
 void stop() {
-  digitalWrite(DIRA, LOW);  //fast stop
-  digitalWrite(DIRB, LOW);  //fast stop
+  digitalWrite(motor.DIRA, LOW);  //fast stop
+  digitalWrite(motor.DIRB, LOW);  //fast stop
 }
 
 void cycleMotor() {
