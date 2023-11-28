@@ -1,15 +1,12 @@
+
 #include "IRremote.h"
 #include "lcd.h"
 #include "motor.h"
 #include "serial.h"
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
-
-
-
 IRrecv irrecv(receiver);  // create instance of 'irrecv'
 decode_results results;   // create instance of 'decode_results'
-
 
 //global
 int time_interval = 10;

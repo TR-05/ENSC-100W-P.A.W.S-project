@@ -3,10 +3,6 @@
 
 extern LiquidCrystal lcd;
 
-void func()
-{
-}
-
 class LCD
 {
 public:
