@@ -1,14 +1,12 @@
 
-#include "IRremote.h"
 #include "lcd.h"
 #include "motor.h"
 #include "serial.h"
 #include "button.h"
 #include "foodDispensing.h"
+#include "ir.h"
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
-IRrecv irrecv(receiver);  // create instance of 'irrecv'
-decode_results results;   // create instance of 'decode_results'
 
 //global
 int time_interval = 10;
@@ -16,11 +14,6 @@ double food_amount;
 unsigned long last_dispense_time = 0;
 int set_upTime = millis();
 
-//Remote buttons
-bool button_VolUp, last_button_VolUp, button_VolDown, last_button_VolDown,
-  button_EQ, last_button_EQ, button_power, last_button_power, button_0, last_button_0, button_1, last_button_1,
-  button_2, last_button_2, button_Down, last_button_Down, button_Up, last_button_Up, button_Func, last_button_Func, button_Left, last_button_Left, button_Right, last_button_Right,
-  last_button_ST, button_ST;
 float joystick_x, joystick_y;
 //Amount
 double food_out = 0;
@@ -45,7 +38,6 @@ void set_time() {
 button limit_switch(limit_switch_port);
 button joystick(joystick_button_port);
 void setup() {
-  irrecv.enableIRIn();  // Start the receiver
   motor.initialize();
 
   dispense::getFoodAmount();
@@ -73,6 +65,8 @@ void setup() {
 }
 
 void loop() {
+    IR::recieveIR();
+
    //unsigned long elapsed_millis = millis();
   //int elapsed_time = elapsed_millis / (1000 * 60);  // Convert milliseconds to minutes
   //Serial.print(elapsed_time);
@@ -139,23 +133,22 @@ if ((fmod(current_time, 5.0)) < 1) {
   if (fabs(joystick_x) < 6) joystick_x = 0;
   if (fabs(joystick_y) < 6) joystick_y = 0;
 
-  recieveIR();
   //testing little function
-  if (last_button_EQ != button_EQ && button_EQ) {
+  if (IR::EQ.newPress(true)) {
     motor.CycleWheel();
   }
 
-  if (last_button_power != button_power && button_power) {
+  if (IR::power.newPress(true)) {
     motor.spin(0);
   }
 
-  if (last_button_0 != button_0 && button_0) {
+  if (IR::_0.newPress(true)) {
     motor.spin(0);
   }
-  if (last_button_1 != button_1 && button_1) {
+  if (IR::_1.newPress(true)) {
     motor.spin(255, false);
   }
-  if (last_button_2 != button_2 && button_2) {
+  if (IR::_2.newPress(true)) {
     motor.spin(255, true);
   }
 
@@ -227,121 +220,9 @@ if ((fmod(current_time, 5.0)) < 1) {
   Serial.print(joystick_y);
   Serial.print("\n");*/
 
-
-  last_button_VolDown = button_VolDown;
-  last_button_VolUp = button_VolUp;
-  last_button_EQ = button_EQ;
-  last_button_power = button_power;
-  last_button_0 = button_0;
-  last_button_1 = button_1;
-  last_button_2 = button_2;
-  last_button_Right = button_Right;
-  last_button_Left = button_Left;
-  last_button_ST = button_ST;
-  last_button_Down = button_Down;
-  last_button_Up = button_Up;
-  last_button_Func = button_Func;
   lcd1.set("time", "");
   lcd1.update();
   delay(20);
-}
-
-int recieveIR() {
-  button_VolUp = false;
-  button_VolDown = false;
-  button_EQ = false;
-  button_0 = false;
-  button_1 = false;
-  button_2 = false;
-  button_power = false;
-  button_Down = false;
-  button_Up = false;
-  button_Func = false;
-  button_Left = false;
-  button_Right = false;
-  button_ST = false;
-  button_Func = false;
-
-  if (irrecv.decode(&results))  // have we received an IR signal?
-
-  {
-    Serial.print("New Press: ");
-    Serial.print(results.value, HEX);
-    Serial.println();
-
-
-    switch (results.value) {
-        // case 0xFFFFFFFF:
-        //   break;
-
-      case 0xFFA857:  // VOL- button pressed
-        button_VolDown = true;
-        break;
-      case 0xFF629D:  // VOL+ button pressed
-        button_VolUp = true;
-        break;
-      case 0xFF6897:  // 0
-        button_0 = true;
-        break;
-      case 0xFFA25D:  // Power
-        button_power = true;
-        break;
-      case 0xFFE21D:  // FUNC/STOP
-        button_Func = true;
-        break;
-      case 0xFF22DD:  // left arrow
-        button_Left = true;
-        break;
-      case 0xFF02FD:  // Pause/Play
-        button_VolUp = true;
-        break;
-      case 0xFFC23D:  // Right Arrow
-        button_Right = true;
-        break;
-      case 0xFFE01F:  // Down Arrow
-        button_Down = true;
-        break;
-      case 0xFF906F:  // Up Arrow
-        button_Up = true;
-        break;
-      case 0xFF9867:  // button_EQ
-        button_EQ = true;
-        break;
-      case 0xFFB04F:  // ST/REPT
-        button_ST = true;
-        break;
-      case 0xFF30CF:  // 1
-        button_1 = true;
-        break;
-      case 0xFF18E7:  // 2
-        button_2 = true;
-        break;
-      case 0xFF7A85:  // 3
-        button_VolUp = true;
-        break;
-      case 0xFF10EF:  // 4
-        button_VolUp = true;
-        break;
-      case 0xFF38C7:  // 5
-        button_VolUp = true;
-        break;
-      case 0xFF5AA5:  // 6
-        button_VolUp = true;
-        break;
-      case 0xFF42BD:  // 7
-        button_VolUp = true;
-        break;
-      case 0xFF4AB5:  // 8
-        button_VolUp = true;
-        break;
-      case 0xFF52AD:  // 9
-        button_VolUp = true;
-        break;
-    }
-
-    irrecv.resume();  // receive the next value
-  }
-  return 0;
 }
 
 int getTime() {
@@ -349,27 +230,20 @@ int getTime() {
   int set_upTime = millis();
 
   while (true) {
-    if (irrecv.decode(&results)) {
-      switch (results.value) {
-        case 0xFFC23D:
-          // Increment the time interval when the right button is pressed
-          time_interval++;
-          break;
-
-        case 0xFF22DD:
-          // Decrement the time interval when the left button is pressed
-          if (time_interval > 0) {
-            time_interval--;
-          }
-          break;
-
-        case 0xFFB04F:
-          // Display a confirmation message when the ST button is pressed
+    IR::recieveIR();
+      if (IR::right.newPress(true)) {
+        time_interval++;
+      }
+      if (IR::right.newPress(true) && time_interval > 0) {
+        time_interval--;
+      }
+      if (IR::st.newPress(true)) {
           lcd.clear();
           lcd.print("Press ST ");
           lcd.setCursor(0, 1);
           lcd.print("to confirm");
-          irrecv.resume();  // Receive the next value
+          }
+          // Display a confirmation message when the ST button is pressed
 
           // Wait for the next ST button press
           while (true) {

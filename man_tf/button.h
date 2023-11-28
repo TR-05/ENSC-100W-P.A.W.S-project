@@ -10,6 +10,14 @@ public:
     }
     button() {}
 
+    void off()
+    {
+        currentState = false;
+    }
+    void on()
+    {
+        currentState = true;
+    }
     bool newPress()
     {
         currentState = !digitalRead(this->pin);
@@ -22,6 +30,17 @@ public:
         return result;
     }
 
+    bool newPress(bool IR)
+    {
+        bool result = false;
+        if (currentState && !lastState)
+        {
+            result = true;
+        }
+        lastState = currentState;
+        return result;
+    }
+    
 private:
     bool lastState = false;
     bool currentState = false;
