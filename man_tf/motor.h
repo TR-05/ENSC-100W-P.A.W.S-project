@@ -76,11 +76,7 @@ public:
 
         Serial.print("\n\n\n");
 
-        while (millis() - motorStartMillis < timeToSpinFor)
-        {
-        Serial.print("\nlooping");
-            delay(10);
-        }
+        delay(timeToSpinFor);
         spin(255, true);
         delay(70);
         spin(0);
