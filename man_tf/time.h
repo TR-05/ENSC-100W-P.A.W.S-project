@@ -29,7 +29,7 @@ namespace time
             for (int i = 0; i < cycles; i++)
             {
                 
-                motor.spinFor(180, 255, 1);
+                motor.spinFor(195, 255, 1);
                 delay(300);
                 motor.CycleWheel(speed);
                 delay(500);

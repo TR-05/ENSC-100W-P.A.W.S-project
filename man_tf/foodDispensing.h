@@ -2,32 +2,37 @@
 #include "lcd.h"
 #include "ir.h"
 #include "motor.h"
-namespace dispense {
+namespace dispense
+{
 
-float time_interval = 0;
-float food_amount = 0;
-int time_unit = 0;
-String time_unit_str[] = {"Sec", "Min", "Hour", "Day"};
+  float time_interval = 0;
+  float food_amount = 0;
+  int time_unit = 0;
+  String time_unit_str[] = {"Sec", "Min", "Hour", "Day"};
 
-//int time_unit_multiplier[] = {1, 60, 3600, 86400}; // multipliers, corresponds to guy
+  // int time_unit_multiplier[] = {1, 60, 3600, 86400}; // multipliers, corresponds to guy
 
-String getTimeUnits(){
-  
-
-  while (true)
+  String getTimeUnits()
   {
-    LCD::print("Time Unit:   ", time_unit_str[time_unit]);
-    
-    if (IR::recieveIR())
+
+    while (true)
     {
-      if (IR::right.newPress(true))
+      LCD::print("Time Unit: >>|", time_unit_str[time_unit]);
+
+      if (IR::recieveIR())
       {
-        time_unit = (time_unit + 1) % 4;
-      }
-      if (IR::left.newPress(true) && time_unit > 0)
-      {
-        time_unit = (time_unit - 1) % 4;
-      }
+        if (IR::right.newPress(true))
+        {
+          time_unit = (time_unit + 1);
+          if (time_unit > 3)
+            time_unit = 0;
+        }
+        if (IR::left.newPress(true))
+        {
+          time_unit--;
+          if (time_unit < 0)
+            time_unit = 3;
+        }
       if (IR::st.newPress(true))
       {
         LCD::set("", "Confirmed");
@@ -36,10 +41,10 @@ String getTimeUnits(){
       }
     }
     delay(20);
-    //LCD::update();
+    // LCD::update();
   }
   LCD::print("Confirmed", time_unit_str[time_unit]);
-  //LCD::print(0, 1, time_unit_str[time_unit], 2);
+  // LCD::print(0, 1, time_unit_str[time_unit], 2);
   return time_unit_str[time_unit];
 }
 
@@ -54,11 +59,11 @@ float getTime()
     {
       if (IR::right.newPress(true))
       {
-        time_interval+=.25;
+        time_interval += .25;
       }
       if (IR::left.newPress(true) && time_interval > 0)
       {
-        time_interval-=.25;
+        time_interval -= .25;
       }
       if (IR::st.newPress(true))
       {
@@ -76,8 +81,6 @@ float getTime()
   return time_interval;
 }
 
-
-
 float getFoodAmount()
 {
 
@@ -89,11 +92,11 @@ float getFoodAmount()
     {
       if (IR::right.newPress(true))
       {
-        food_amount+=.25;
+        food_amount += .25;
       }
       if (IR::left.newPress(true) && food_amount > 0)
       {
-        food_amount-=.25;
+        food_amount -= .25;
       }
       if (IR::st.newPress(true))
       {
@@ -125,13 +128,13 @@ float getFoodAmount()
   return minutes;
 }*/
 
-
-void dispenseFood() {
-  unsigned long current_time = millis()/(1000);
+void dispenseFood()
+{
+  unsigned long current_time = millis() / (1000);
   delay(1000);
-  Serial.print(0/1000);
+  Serial.print(0 / 1000);
   Serial.print("Current time: ");
-  Serial.println(current_time - (0/1000));
+  Serial.println(current_time - (0 / 1000));
   /*Serial.print("Last dispense time: ");
   Serial.println(last_dispense_time);
 
@@ -149,10 +152,5 @@ void dispenseFood() {
     // ...
   }*/
 }
-
-
-
-
-
 
 } // namespace dispense

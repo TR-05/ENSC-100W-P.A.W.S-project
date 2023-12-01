@@ -32,7 +32,8 @@ void set_time()
 button limit_switch(limit_switch_port);
 button joystick(joystick_button_port);
 
-void initalizeDispenser() {
+void initalizeDispenser()
+{
   Serial.print(dispense::getTimeUnits());
   Serial.print("\n\n");
   delay(2000);
@@ -42,10 +43,10 @@ void initalizeDispenser() {
   Serial.print(dispense::getFoodAmount());
   Serial.print("\n\n");
   LCD::print("     Cups", "every      ");
-  LCD::print(0,0, dispense::food_amount, 2);
-  LCD::print(6,1, dispense::time_interval, 2);
-  LCD::print(10,1, dispense::time_unit_str[dispense::time_unit]);
-  
+  LCD::print(0, 0, dispense::food_amount, 2);
+  LCD::print(6, 1, dispense::time_interval, 2);
+  LCD::print(10, 1, dispense::time_unit_str[dispense::time_unit]);
+
   delay(3000);
   time::set_up_time_ms = millis() - 1001;
 }
@@ -57,7 +58,8 @@ void setup()
   LCD::initialize();
   initalizeDispenser();
   limit_switch.newPress();
-  if (limit_switch.currentState == false) {
+  if (limit_switch.currentState == false)
+  {
     motor.CycleWheel(255);
   }
 }
@@ -67,28 +69,31 @@ void loop()
   IR::recieveIR();
   LCD::clear();
   time::update();
-  LCD::print(0,0, time::time_ms, 0);
-  LCD::print(8,0, time::time_s, 1);
-  LCD::print(0,1, time::time_m, 2);
-  LCD::print(8,1, time::time_h, 3);
+  LCD::print(0, 0, time::time_ms, 0);
+  LCD::print(8, 0, time::time_s, 1);
+  LCD::print(0, 1, time::time_m, 2);
+  LCD::print(8, 1, time::time_h, 3);
 
-  if (IR::func.newPress(true)) {
+  if (IR::func.newPress(true))
+  {
     initalizeDispenser();
   }
 
   time::checkForDispense(dispense::time_interval, 255, dispense::food_amount);
 
-  joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
-  joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
-  if (fabs(joystick_x) < 6)
-    joystick_x = 0;
-  if (fabs(joystick_y) < 6)
-    joystick_y = 0;
+  /*  joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
+    joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
+    if (fabs(joystick_x) < 6)
+      joystick_x = 0;
+    if (fabs(joystick_y) < 6)
+      joystick_y = 0;*/
 
   // testing little function
   if (IR::EQ.newPress(true))
   {
     motor.spinFor(180, 255, 1);
+    delay(300);
+    motor.CycleWheel(255);
   }
 
   if (IR::power.newPress(true))
@@ -109,7 +114,7 @@ void loop()
     motor.spin(255, true);
   }
 
-  if (joystick_y > 0)
+  /*if (joystick_y > 0)
   {
     float speed = map(joystick_y, 0, 100, 50, 255);
     motor.spin(speed);
@@ -123,17 +128,17 @@ void loop()
   {
     motor.spin(0);
   }
-
+  */
   if (limit_switch.newPress())
   {
     lcd_counter++;
   }
 
-  if (joystick.newPress())
+  /*if (joystick.newPress())
   {
     motor.CycleWheel(255);
     lcd_counter++;
-  }
+  }*/
 
   /*if (button_Up != last_button_Up && button_Up) {
     food_amount += 0.25;

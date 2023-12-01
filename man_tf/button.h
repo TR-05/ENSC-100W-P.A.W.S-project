@@ -47,4 +47,4 @@ public:
 };
 
 extern button limit_switch;
-extern button joystick;
+//extern button joystick;
