@@ -6,12 +6,49 @@ namespace dispense {
 
 float time_interval = 0;
 float food_amount = 0;
+int time_units = 0;
+String time_units_str[] = {"Sec", "Min", "Hour", "Day"};
+int time_units_multiplier[] = {1, 60, 3600, 86400}; // multipliers, corresponds to guy
+
+String getTimeUnits(){
+  
+
+  while (true)
+  {
+    LCD::print("Time Unit:   ", time_units_str[time_units]);
+    
+    if (IR::recieveIR())
+    {
+      if (IR::right.newPress(true))
+      {
+        time_units = (time_units + 1) % 4;
+      }
+      if (IR::left.newPress(true) && time_units > 0)
+      {
+        time_units = (time_units - 1) % 4;
+      }
+      if (IR::st.newPress(true))
+      {
+        time_units = time_units_multiplier[time_units]; // store multiplier guy
+        LCD::set("", "Confirmed");
+        LCD::update();
+        break;
+      }
+    }
+    delay(20);
+    //LCD::update();
+  }
+  LCD::print("Confirmed", time_units_str[time_units]);
+  LCD::print(0, 1, time_units, 2);
+  return time_units_str[time_units];
+}
+
 int getTime()
 {
 
   while (true)
   {
-    LCD::print("Time:      Min", "");
+    LCD::print("Time:      ", "");
     LCD::print(6, 0, time_interval, 2);
     if (IR::recieveIR())
     {
@@ -34,7 +71,7 @@ int getTime()
   }
 
   // Display the current time interval
-  LCD::print("Confirmed", "     Minutes");
+  LCD::print("Confirmed", time_units_str[time_units]);
   LCD::print(0, 1, time_interval, 2);
   return time_interval;
 }

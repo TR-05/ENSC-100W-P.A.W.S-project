@@ -33,6 +33,8 @@ button limit_switch(limit_switch_port);
 button joystick(joystick_button_port);
 
 void initalizeDispenser() {
+  Serial.print(dispense::getTimeUnits());
+  Serial.print("\n\n");
   Serial.print(dispense::getTime());
   Serial.print("\n\n");
   delay(2000);
