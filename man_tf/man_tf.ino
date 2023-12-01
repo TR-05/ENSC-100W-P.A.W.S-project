@@ -35,15 +35,17 @@ button joystick(joystick_button_port);
 void initalizeDispenser() {
   Serial.print(dispense::getTimeUnits());
   Serial.print("\n\n");
+  delay(2000);
   Serial.print(dispense::getTime());
   Serial.print("\n\n");
   delay(2000);
   Serial.print(dispense::getFoodAmount());
   Serial.print("\n\n");
-
-  LCD::print("     Cups", "every      Min");
+  LCD::print("     Cups", "every      ");
   LCD::print(0,0, dispense::food_amount, 2);
   LCD::print(6,1, dispense::time_interval, 2);
+  LCD::print(10,1, dispense::time_unit_str[dispense::time_unit]);
+  
   delay(3000);
   time::set_up_time_ms = millis() - 1001;
 }

@@ -39,6 +39,11 @@ namespace LCD
         lcd.setCursor(cursorColumn, cursorRow);
         lcd.print(value, digits);
     }
+    void print(int cursorColumn, int cursorRow, String value)
+    {
+        lcd.setCursor(cursorColumn, cursorRow);
+        lcd.print(value);
+    }
 }
 
 /*
