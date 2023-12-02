@@ -53,6 +53,8 @@ void initalizeDispenser()
 void setup()
 {
   Serial.begin(115200);
+  Serial.print("initialize: \n");
+  
   motor.initialize();
   IR::intialize();
   LCD::initialize();

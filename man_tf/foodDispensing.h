@@ -17,6 +17,7 @@ namespace dispense
 
     while (true)
     {
+      Serial.print("Time Unit: \n");
       LCD::print("Time Unit: >>|", time_unit_str[time_unit]);
 
       if (IR::recieveIR())
@@ -53,6 +54,7 @@ float getTime()
 
   while (true)
   {
+    Serial.print("Time: \n");
     LCD::print("Time:      ", "");
     LCD::print(6, 0, time_interval, 2);
     if (IR::recieveIR())
@@ -86,6 +88,7 @@ float getFoodAmount()
 
   while (true)
   {
+    Serial.print("Food: \n");
     LCD::print("Food: ", "Cups");
     LCD::print(7, 0, food_amount, 2);
     if (IR::recieveIR())
