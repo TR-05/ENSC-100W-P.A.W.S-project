@@ -1,5 +1,5 @@
 {
     "sketch": "man_tf.ino",
     "board": "arduino:avr:uno",
-    "port": "/dev/tty.usbmodem1101"
+    "port": "COM3"
 }

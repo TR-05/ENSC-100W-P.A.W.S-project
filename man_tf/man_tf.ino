@@ -81,8 +81,8 @@ void loop()
     initalizeDispenser();
   }
 
-  time::checkForDispense(dispense::time_interval, 255, dispense::food_amount);
-
+  //time::checkForDispense(dispense::time_interval, 255, dispense::food_amount);
+  dispense::dispenseFood();
   /*  joystick_x = map(analogRead(X_pin), 0, 1023, -100, 100);
     joystick_y = map(analogRead(Y_pin), 0, 1023, -100, 100);
     if (fabs(joystick_x) < 6)

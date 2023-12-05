@@ -18,7 +18,8 @@ namespace time
         time_h = time_m / 60.0;
         time_d = time_h / 24.0;
     }
-
+     
+     //float dispense_interval = time_interval/time_unit_multiplier[time_unit];
     void checkForDispense(float minutes, int speed, float cups)
     {
         float interval_ms = minutes * 60 * 1000;

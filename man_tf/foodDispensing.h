@@ -2,6 +2,7 @@
 #include "lcd.h"
 #include "ir.h"
 #include "motor.h"
+#include "time.h"
 namespace dispense
 {
 
@@ -10,14 +11,19 @@ namespace dispense
   int time_unit = 0;
   String time_unit_str[] = {"Sec", "Min", "Hour", "Day"};
 
-  // int time_unit_multiplier[] = {1, 60, 3600, 86400}; // multipliers, corresponds to guy
+  float time_unit_multiplier[] = {1000, 60000, 3600000,   86400000}; // multipliers, corresponds to guy
+  /*
+  1/1000 = ms to sec
+  millis()/60000 = min
+  millis()/3600000 = hour
+  millis()/86400000 = day
+  */
 
   String getTimeUnits()
   {
 
     while (true)
     {
-      Serial.print("Time Unit: \n");
       LCD::print("Time Unit: >>|", time_unit_str[time_unit]);
 
       if (IR::recieveIR())
@@ -54,18 +60,17 @@ float getTime()
 
   while (true)
   {
-    Serial.print("Time: \n");
-    LCD::print("Time:      ", "");
+    LCD::print("Time Interval:  >>|  ", "");
     LCD::print(6, 0, time_interval, 2);
     if (IR::recieveIR())
     {
       if (IR::right.newPress(true))
       {
-        time_interval += .25;
+        time_interval += .50;
       }
       if (IR::left.newPress(true) && time_interval > 0)
       {
-        time_interval -= .25;
+        time_interval -= .50;
       }
       if (IR::st.newPress(true))
       {
@@ -88,8 +93,7 @@ float getFoodAmount()
 
   while (true)
   {
-    Serial.print("Food: \n");
-    LCD::print("Food: ", "Cups");
+    LCD::print("Food: >>|", "Cups");
     LCD::print(7, 0, food_amount, 2);
     if (IR::recieveIR())
     {
@@ -115,45 +119,22 @@ float getFoodAmount()
   return food_amount;
 }
 
-/*int time_elapsed() {
-  int elapsed_millis = millis();
-  int seconds = elapsed_millis / (1000);
-  int minutes = elapsed_millis / (1000 * 60);
-  int hours = elapsed_millis / (1000 * 60 * 60);
-
-  // Print the elapsed time
-  Serial.print("Elapsed time: ");
-  Serial.print(minutes);
-  Serial.println(" minutes");
-  Serial.print(hours);
-  Serial.println(" hours");
-
-  return minutes;
-}*/
-
 void dispenseFood()
 {
-  unsigned long current_time = millis() / (1000);
-  delay(1000);
-  Serial.print(0 / 1000);
-  Serial.print("Current time: ");
-  Serial.println(current_time - (0 / 1000));
-  /*Serial.print("Last dispense time: ");
-  Serial.println(last_dispense_time);
+  float dispense_interval = time_interval*time_unit_multiplier[time_unit];
+  int cycles = (food_amount * 4.0);
+  if ((fmod(time::time_ms, dispense_interval)) < 1000) 
+  {
+    for (int i = 0; i < cycles; i++)
+    {
+      motor.spinFor(195, 255, 1);
+      delay(300);
+      motor.CycleWheel(255);
+      delay(500);
+    }
+  }
+  }
 
-  unsigned long elapsed_time = (current_time - last_dispense_time) / (1000 * 60);  // Convert milliseconds to minutes
-  int remaining_time = time_interval - elapsed_time;
 
-  Serial.print("Elapsed time: ");
-  Serial.println(elapsed_time);
-  Serial.print("Remaining time: ");
-  Serial.println(remaining_time);
-  if (remaining_time <= 0) {
-
-  } else {
-    // Print remaining time to LCD and Serial monitor
-    // ...
-  }*/
-}
 
 } // namespace dispense
