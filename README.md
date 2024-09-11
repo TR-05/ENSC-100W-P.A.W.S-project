@@ -1,0 +1,1 @@
+Code for P.A.W.S arduino based project in the ENSC 100W class. <br>Used an Arduino UNO to control a custom built petfood dispenser, with user buttons and a remote to program the time increment and food volume.
