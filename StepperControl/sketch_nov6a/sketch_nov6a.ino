@@ -1,4 +1,3 @@
-
 #include <Stepper.h>
 
 // change this to the number of steps on your motor

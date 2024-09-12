@@ -4,6 +4,7 @@
 #include "Stepper.h"
 #include "IRremote.h"
 
+
 /*----- Variables, Pins -----*/
 #define STEPS  32   // Number of steps per revolution of Internal shaft
 int  Steps2Take;  // 2048 = 1 Revolution

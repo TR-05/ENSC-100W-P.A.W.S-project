@@ -26,3 +26,4 @@ int main() {
     std::cout << "Times motor rotated: " << user_amount * 4 << std::endl;
     return 0;
 }
+

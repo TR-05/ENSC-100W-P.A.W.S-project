@@ -10,6 +10,7 @@ the L293D chip
 #define DIRA 3
 #define DIRB 4
 
+
 int i;
  
 void setup() {
